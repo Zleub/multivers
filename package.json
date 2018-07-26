@@ -1,0 +1,30 @@
+{
+  "name": "multivers",
+  "version": "0.0.0",
+  "description": "",
+  "main": "cli.js",
+  "scripts": {
+    "run": "npm run-script build && node server_build/main.js",
+    "build": "babel server/ -d server_build/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zleub/multivers.git"
+  },
+  "author": "zleub",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Zleub/multivers/issues"
+  },
+  "homepage": "https://github.com/Zleub/multivers#readme",
+  "dependencies": {
+    "express": "^4.16.3"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-flow": "^6.23.0",
+    "babel-preset-latest": "^6.24.1",
+    "flow-bin": "^0.77.0",
+    "flow-typed": "^2.5.1"
+  }
+}

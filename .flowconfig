@@ -1,0 +1,11 @@
+[ignore]
+
+[include]
+
+[libs]
+./flow_typed/npm/setprototypeof_v1.x.x.js
+[lints]
+
+[options]
+
+[strict]
