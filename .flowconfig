@@ -1,9 +1,13 @@
 [ignore]
-
+  flow-coverage/**
+  flow-typed/**
+  node_modules/**
+  *_build/**
+  docs/**
 [include]
 
 [libs]
-./flow_typed/npm/setprototypeof_v1.x.x.js
+
 [lints]
 
 [options]
