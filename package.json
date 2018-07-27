@@ -5,7 +5,7 @@
   "main": "cli.js",
   "scripts": {
     "run": "npm run-script build && node server_build/main.js",
-    "build": "babel server/ -d server_build/"
+    "build": "babel server/ -d server_build/ && babel blessed_client/ -d blessed_client_build/"
   },
   "repository": {
     "type": "git",
@@ -18,7 +18,10 @@
   },
   "homepage": "https://github.com/Zleub/multivers#readme",
   "dependencies": {
-    "express": "^4.16.3"
+    "blessed": "^0.1.81",
+    "express": "^4.16.3",
+    "express-ws": "^4.0.0",
+    "ws": "^6.0.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
