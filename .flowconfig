@@ -2,12 +2,13 @@
   flow-coverage/**
   flow-typed/**
   node_modules/**
-  *_build/**
+  build/**
   docs/**
+  assets/**
 [include]
 
 [libs]
-
+  libs/Polymer.js
 [lints]
 
 [options]

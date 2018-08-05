@@ -1,6 +1,0 @@
-const execSync = require('child_process').execSync
-
-const cmd = ${cmd}
-const args = ${args}
-module.exports = () =>
-  execSync(`${cmd} ${args.join(' ')}`).toString()

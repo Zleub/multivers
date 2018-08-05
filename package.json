@@ -4,8 +4,16 @@
   "description": "",
   "main": "cli.js",
   "scripts": {
-    "run": "npm run-script build && node server_build/main.js",
-    "build": "babel server/ -d server_build/ && babel blessed_client/ -d blessed_client_build/"
+    "start": "npm run build && node build/server/main.js",
+    "watch": "nodemon . -x \"npm run start\" -i build -i docs -i apidoc -i flow_coverage",
+    "build": "npm run client && npm run server",
+    "extra": "npm run doc && npm run coverage",
+    "apidoc": "apidoc -i server/ -o docs/apidoc",
+    "jsdoc": "documentation build -o docs/reference.json ./server/**/*.js --document-exported",
+    "doc": "rm -rf docs; mkdir docs; npm run apidoc && npm run jsdoc",
+    "coverage": "flow-coverage-report -c 8 -i '*.js' -i '**/*.js' -x 'flow-*/**' -x 'node_modules/**' -x 'build/**' -x 'docs/**' -x 'client/node_modules/**' -x 'client/test/**'",
+    "client": "polymer build --root client/ --bundle && mv build/default/client build/client && rm -rf build/default",
+    "server": "babel server/ -d build/server"
   },
   "repository": {
     "type": "git",
@@ -21,10 +29,12 @@
     "blessed": "^0.1.81",
     "express": "^4.16.3",
     "express-ws": "^4.0.0",
-    "ws": "^6.0.0"
+    "ws": "^6.0.0",
+    "xml2js": "^0.4.19"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
+    "babel-plugin-include": "^1.2.0",
     "babel-preset-flow": "^6.23.0",
     "babel-preset-latest": "^6.24.1",
     "flow-bin": "^0.77.0",

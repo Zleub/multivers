@@ -2,5 +2,5 @@ docs
 flow-coverage
 flow-typed
 node_modules
-*_build
+build/
 package-lock.json
