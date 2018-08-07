@@ -70,15 +70,67 @@ class ClientApp extends PolymerElement {
       response.json().then(e => {
         if ( JSON.stringify(e) != JSON.stringify(this.user) )
           this.set('user', e)
-          setupKonva.call(this)
 
-          const socket = new WebSocket('ws://localhost:4242');
-          socket.addEventListener('open', function (event) {
-              socket.send('Hello Server!');
+          let layer = setupKonva.call(this)
+          this.socket = new WebSocket('ws://localhost:4242/' + this.user.token);
+          this.socket.addEventListener('open', (event) => {
+            this.socket.send('Hello Server!');
           });
-          socket.addEventListener('message', function (event) {
-              console.log('Message from server ', event.data);
+          this.socket.addEventListener('message', (event) => {
+            const msg = JSON.parse(event.data)
+            this.set('user.offset', msg.offset)
+
+            if (msg.tiles) {
+              layer.map_group.children.forEach( e => {
+                e.setAttrs({
+                  fill: ''
+                })
+              })
+              msg.tiles.forEach( (e) => {
+                let _ = Array.from(layer.map_group.children).find(_ => {
+                  return _.x() == (layer.center.x + e.x) * layer.scale && _.y() == (layer.center.y + e.y) * layer.scale
+                })
+                if (_) {
+                  switch (e.name) {
+                    case 'floor':
+                        _.setAttrs({
+                          content: [ e ],
+                          fill: 'maroon'
+                        })
+                      break
+                    case 'wall':
+                        _.setAttrs({
+                          content: [ e ],
+                          fill: 'grey'
+                        })
+                      break
+                    default :
+                        _.setAttrs({
+                          content: [ e ]
+                        })
+                  }
+                }
+              })
+
+              this.set('user.position', msg.position)
+
+            }
+
+            // layer.player.position( {
+            //   x: layer.center.x * layer.scale,
+            //   y: layer.center.y * layer.scale
+            // })
+            layer.player.offsetX(this.user.offset[0])
+            layer.player.offsetY(this.user.offset[1])
+            layer.draw()
+            // layer.player.position({
+            //   x: msg.position[0] * 16,
+            //   y: msg.position[1] * 16
+            // })
           });
+
+
+
       })
     })
   }

@@ -9,7 +9,7 @@
     "build": "npm run client && npm run server",
     "extra": "npm run doc && npm run coverage",
     "apidoc": "apidoc -i server/ -o docs/apidoc",
-    "jsdoc": "documentation build -o docs/reference.json ./server/**/*.js --document-exported",
+    "jsdoc": "documentation build -f html -o docs/reference ./server/**/*.js --document-exported",
     "doc": "rm -rf docs; mkdir docs; npm run apidoc && npm run jsdoc",
     "coverage": "flow-coverage-report -c 8 -i '*.js' -i '**/*.js' -x 'flow-*/**' -x 'node_modules/**' -x 'build/**' -x 'docs/**' -x 'client/node_modules/**' -x 'client/test/**'",
     "client": "polymer build --root client/ --bundle && mv build/default/client build/client && rm -rf build/default",

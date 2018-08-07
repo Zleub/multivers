@@ -13,66 +13,27 @@ function setGameListeners(layer, player, scale) {
     Object.keys(pressed).filter( k => pressed[k] == true).forEach( key => {
       switch (key) {
         case 'ArrowUp':
-        if (this.user.offset[1] + 1 < scale) {
-          this.user.offset[1] = this.user.offset[1] + 1
-        }
-        else {
-          this.user.offset[1] = 0
-          this.user.position[1] -= 1
-          player.position({
-            x: player.x(),
-            y: player.y() - scale
-          })
-        }
-        break
+          this.socket.send('ArrowUp')
+          break
         case 'ArrowDown':
-        if (this.user.offset[1] - 1 > -scale) {
-          this.user.offset[1] = this.user.offset[1] - 1
-        }
-        else {
-          this.user.offset[1] = 0
-          this.user.position[1] += 1
-          player.position({
-            x: player.x(),
-            y: player.y() + scale
-          })
-        }
-        break
+          this.socket.send('ArrowDown')
+          break
         case 'ArrowLeft':
-        if (this.user.offset[0] + 1 < scale) {
-          this.user.offset[0] = this.user.offset[0] + 1
-        }
-        else {
-          this.user.offset[0] = 0
-          this.user.position[0] -= 1
-          player.position({
-            x: player.x() - scale,
-            y: player.y()
-          })
-        }
-        break
+          this.socket.send('ArrowLeft')
+          break
         case 'ArrowRight':
-        if (this.user.offset[0] - 1 > -scale) {
-          this.user.offset[0] = this.user.offset[0] - 1
-        }
-        else {
-          this.user.offset[0] = 0
-          this.user.position[0] += 1
-          player.position({
-            x: player.x() + scale,
-            y: player.y()
-          })
-        }
-        break
+          this.socket.send('ArrowRight')
+          break
       }
 
-      this.notifyPath('user.offset.0')
-      this.notifyPath('user.offset.1')
-      this.notifyPath('user.position.0')
-      this.notifyPath('user.position.1')
-      player.offsetX(this.user.offset[0])
-      player.offsetY(this.user.offset[1])
-      layer.draw()
+      // this.notifyPath('user.offset.0')
+      // this.notifyPath('user.offset.1')
+      // this.notifyPath('user.position.0')
+      // this.notifyPath('user.position.1')
+      // player.offsetX(this.user.offset[0])
+      // player.offsetY(this.user.offset[1])
+
+      // layer.draw()
     })
 
     window.requestAnimationFrame(loop)
