@@ -1,9 +1,12 @@
+
 /* @flow */
 
 import Drawable, {config, type Drawable_t} from './Drawable'
 import Tileset from './Tileset'
 import Player from './Player'
 import World, {world, addPlayer} from './World'
+import move from './Movement'
+import { computeFOV } from './FOV'
 import Wiki from './Wiki'
 
 const fs = require('fs')
@@ -23,14 +26,10 @@ addPlayer(world, new Player(world, {
   ip: "127.0.0.1"
 }))
 
-Drawable({
-  name: 'floor'
-})
-
-Tileset({
-  path: 'assets/lpc-terrains/',
-  tilemap: 'terrain-v7.tsx'
-})
+// Tileset({
+//   path: 'assets/lpc-terrains/',
+//   tilemap: 'terrain-v7.tsx'
+// })
 
 let debug = (req: express$Request, res, next) => {
   // console.log(`${req.url}: ${JSON.stringify(req.headers.user, null, 2)}`)
@@ -39,8 +38,7 @@ let debug = (req: express$Request, res, next) => {
 
 app.use(debug)
 
-/**
-*/
+/** What yp ? */
 let isUser = (req: express$Request, res, next) => {
   if (world.players.filter(e => e.ip == req.connection.remoteAddress)[0])
     next()
@@ -73,120 +71,42 @@ app.get('/me', isUser, (req : express$Request, res: express$Response) => {
   ws_app.ws('/' + player.token, function(ws, req) {
     connected = true
     ws.on('message', function(msg) {
-      if (msg == 'ArrowUp') {
-        if (player.offset[1] + 2 < scale) {
-          player.offset[1] = player.offset[1] + 2
-          ws.send(JSON.stringify({
-            position: player.position,
-            offset: player.offset
-          }));
-        }
-        else {
-          player.offset[1] = 0
-          player.position[1] -= 1
-          let fov = player.computeFOV(player.position, 16)
-          ws.send(JSON.stringify({
-            offset: player.offset,
-            position: player.position,
-            tiles: world.map.filter( (e, i) => {
-                const x = i % world.limits.width
-                const y = Math.floor(i / world.limits.width)
+      let position = [ player.position[0], player.position[1] ]
 
-                return fov.find( e => e[0] == x && e[1] == y)
-            }).map(e => ({
-                name: e.name,
-                x: e.index % world.limits.width - player.position[0],
-                y: Math.floor(e.index / world.limits.width) - player.position[1]
-              }))
-          }));
-        }
+      if (msg == 'ArrowUp') {
+        move(player, { up: 2, down: 0, left: 0, right: 0 })
       }
       if (msg == 'ArrowDown') {
-        if (player.offset[1] - 2 > -scale) {
-          player.offset[1] = player.offset[1] - 2
-          ws.send(JSON.stringify({
-            position: player.position,
-            offset: player.offset
-          }));
-        }
-        else {
-          player.offset[1] = 0
-          player.position[1] += 1
-          let fov = player.computeFOV(player.position, 16)
-          ws.send(JSON.stringify({
-            offset: player.offset,
-            position: player.position,
-            tiles: world.map.filter( (e, i) => {
-                const x = i % world.limits.width
-                const y = Math.floor(i / world.limits.width)
-
-                return fov.find( e => e[0] == x && e[1] == y)
-            }).map(e => ({
-                name: e.name,
-                x: e.index % world.limits.width - player.position[0],
-                y: Math.floor(e.index / world.limits.width) - player.position[1]
-              }))
-          }));
-        }
+        move(player, { up: 0, down: 2, left: 0, right: 0 })
       }
       if (msg == 'ArrowLeft') {
-        if (player.offset[0] + 2 < scale) {
-          player.offset[0] = player.offset[0] + 2
-          ws.send(JSON.stringify({
-            position: player.position,
-            offset: player.offset
-          }));
-        }
-        else {
-          player.offset[0] = 0
-          player.position[0] -= 1
-          let fov = player.computeFOV(player.position, 16)
-          ws.send(JSON.stringify({
-            offset: player.offset,
-            position: player.position,
-            tiles: world.map.filter( (e, i) => {
-                const x = i % world.limits.width
-                const y = Math.floor(i / world.limits.width)
-
-                return fov.find( e => e[0] == x && e[1] == y)
-            }).map(e => ({
-                name: e.name,
-                x: e.index % world.limits.width - player.position[0],
-                y: Math.floor(e.index / world.limits.width) - player.position[1]
-              }))
-          }));
-        }
+        move(player, { up: 0, down: 0, left: 2, right: 0 })
       }
       if (msg == 'ArrowRight') {
-        if (player.offset[0] - 2 > -scale) {
-          player.offset[0] = player.offset[0] - 2
-          ws.send(JSON.stringify({
-            position: player.position,
-            offset: player.offset
-          }));
-        }
-        else {
-          player.offset[0] = 0
-          player.position[0] += 1
-          let fov = player.computeFOV(player.position, 16)
-          ws.send(JSON.stringify({
-            offset: player.offset,
-            position: player.position,
-            tiles: world.map.filter( (e, i) => {
-                const x = i % world.limits.width
-                const y = Math.floor(i / world.limits.width)
-
-                return fov.find( e => e[0] == x && e[1] == y)
-            }).map(e => ({
-                name: e.name,
-                x: e.index % world.limits.width - player.position[0],
-                y: Math.floor(e.index / world.limits.width) - player.position[1]
-              }))
-          }));
-        }
+        move(player, { up: 0, down: 0, left: 0, right: 2 })
       }
 
+      if (position[0] != player.position[0] || position[1] != player.position[1]) {
+        let fov = computeFOV(player.position)
 
+        ws.send(JSON.stringify({
+          position: player.position,
+          offset: player.offset,
+          tiles: world.map.filter( (e, x, y) => {
+              return fov.find( e => e[0] == x && e[1] == y) ? true : false
+          }).map(e => ({
+              name: e.name,
+              x: e.x - player.position[0],
+              y: e.y - player.position[1]
+            }))
+        }))
+      }
+      else {
+        ws.send(JSON.stringify({
+          position: player.position,
+          offset: player.offset
+        }))
+      }
     });
   })
   setTimeout(() => {
@@ -210,17 +130,14 @@ app.get('/world', (req : express$Request, res: express$Response) => {
 
   // const fov = 16
 
-  let fov = player.computeFOV(player.position, 16)
+  let fov = computeFOV(player.position)
   res.end(JSON.stringify({
-    world: world.map.filter( (e, i) => {
-        const x = i % world.limits.width
-        const y = Math.floor(i / world.limits.width)
-
-        return fov.find( e => e[0] == x && e[1] == y)
+    world: world.map.filter( (e, x, y) => {
+        return fov.find( e => e[0] == x && e[1] == y) ? true : false
     }).map(e => ({
         name: e.name,
-        x: e.index % world.limits.width - player.position[0],
-        y: Math.floor(e.index / world.limits.width) - player.position[1]
+        x: e.x - player.position[0],
+        y: e.y - player.position[1]
       }))
   }))
   // res.end( JSON.stringify({

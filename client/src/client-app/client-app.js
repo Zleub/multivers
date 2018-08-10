@@ -42,7 +42,7 @@ class ClientApp extends PolymerElement {
       </style>
       <iron-localstorage name=user value={{user}}></iron-localstorage>
       <div id=header>
-        <h4>Multiver</h4>
+        <h2>Multiver</h2>
       </div>
       <div id=overlay>
         <p>name: {{ user.name }}</p>
@@ -83,6 +83,7 @@ class ClientApp extends PolymerElement {
             if (msg.tiles) {
               layer.map_group.children.forEach( e => {
                 e.setAttrs({
+                  // opacity: 0.3
                   fill: ''
                 })
               })

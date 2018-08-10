@@ -28,8 +28,8 @@ function setupKonva() {
         y: y,
         width: scale,
         height: scale,
-        stroke: 'black',
-        strokeWidth: 1
+        // stroke: 'black',
+        // strokeWidth: 1
       })
       r.on('mouseover', function () {
         that.set('content', this.attrs.content)
@@ -46,8 +46,8 @@ function setupKonva() {
     y: center.y * scale,
     width: scale,
     height: scale,
-    stroke: 'black',
-    strokeWidth: 1,
+    // stroke: 'black',
+    // strokeWidth: 1,
     offsetX: this.user.offset[0],
     offsetY: this.user.offset[1]
   })

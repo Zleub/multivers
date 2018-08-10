@@ -2,6 +2,7 @@
 
 import Drawable, {config, type Drawable_t} from './Drawable'
 import Player from './Player'
+import Map from './Map'
 import Ressource from './Ressource'
 import Wiki from './Wiki'
 
@@ -13,49 +14,28 @@ export const addPlayer = function (world : World, player : Player) {
   world.players.push(player)
 }
 
-const size = 32
 class World {
-  limits: {
-    width: number,
-    height: number
-  }
   players: Array<Player>
   spawn: Array<number>
-  map: Array<{
-    name: string,
-    index: number
-  }>
+  map: Map
   tiles: {
     [tile_name: string]: Drawable_t
   }
 
   constructor() {
+    let map = new Map()
+
     Object.assign(this, {
-      limits: {
-        width: size,
-        height: size
-      },
       players : [],
-      spawn : [Math.floor(size / 2), Math.floor(size / 2)],
-      map : [],
+      spawn : [Math.floor(map.limits.width / 2), Math.floor(map.limits.height / 2)],
+      map : map,
       tiles : config.reduce( (p,e) => {
           p[e.name] = e
           return p
         }, {})
     })
-
-    for (var i = 0; i < this.limits.width * this.limits.height; i++) {
-      this.map.push({
-        name: 'floor',
-        index: i
-      })
-    }
-
-    for (var i = 0; i < 10; i++) {
-      this.map[i + 10 + 10 * this.limits.width].name = 'wall'
-    }
   }
 }
 
 export default World
-export const world = new World
+export const world = new World()
