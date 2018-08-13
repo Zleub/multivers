@@ -1,4 +1,3 @@
 {
-  "presets": ["latest", "flow"],
-  "plugins": ["include"]
+  "presets": ["latest", "flow"]
 }
