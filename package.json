@@ -37,6 +37,7 @@
     "babel-preset-flow": "^6.23.0",
     "babel-preset-latest": "^6.24.1",
     "flow-bin": "^0.77.0",
-    "flow-typed": "^2.5.1"
+    "flow-typed": "^2.5.1",
+    "polymer-cli": "^1.8.0"
   }
 }
