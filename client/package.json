@@ -3,7 +3,8 @@
   "dependencies": {
     "@polymer/iron-ajax": "^3.0.0-pre.20",
     "@polymer/iron-localstorage": "^3.0.0-pre.20",
-    "@polymer/polymer": "^3.0.0"
+    "@polymer/polymer": "^3.0.0",
+    "konva": "^2.2.1"
   },
   "devDependencies": {
     "@webcomponents/webcomponentsjs": "^2.0.0",

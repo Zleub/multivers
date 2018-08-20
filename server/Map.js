@@ -1,6 +1,6 @@
 /* @flow */
 
-export const size = 32
+export const size = 1024
 export const offset = 16
 
 type Cell_t = {
@@ -41,8 +41,14 @@ class Map {
     }
 
     for (var i = 0; i < 10; i++) {
-      const x = Math.floor((Math.random() * size) % size)
-      const y = Math.floor((Math.random() * size) % size)
+      const x = Math.floor(Math.random() * size)
+      const y = Math.floor(Math.random() * size)
+      this.map[x][y].name = 'wall'
+    }
+
+    for (var i = 0; i < 1000; i++) {
+      const x = Math.abs( Math.floor(Math.sin(i) * size / 2) )
+      const y = Math.abs( Math.floor(Math.cos(i) * size / 2) )
       this.map[x][y].name = 'wall'
     }
   }

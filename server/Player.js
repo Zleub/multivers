@@ -18,7 +18,7 @@ class Player extends Ressource {
   constructor(world: World, opts : PlayerOpt_t) {
     super({
       name: opts.name,
-      position: world.spawn,
+      position:opts.position || world.spawn,
       offset: [0, 0]
     })
     Object.assign(this, {

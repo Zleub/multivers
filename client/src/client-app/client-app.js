@@ -71,7 +71,8 @@ class ClientApp extends PolymerElement {
         if ( JSON.stringify(e) != JSON.stringify(this.user) )
           this.set('user', e)
 
-          let layer = setupKonva.call(this)
+          let game = new Game(this.$.container, e)
+          // let layer = setupKonva.call(this)
           this.socket = new WebSocket('ws://localhost:4242/' + this.user.token);
           this.socket.addEventListener('open', (event) => {
             this.socket.send('Hello Server!');
@@ -80,43 +81,93 @@ class ClientApp extends PolymerElement {
             const msg = JSON.parse(event.data)
             this.set('user.offset', msg.offset)
 
-            if (msg.tiles) {
-              layer.map_group.children.forEach( e => {
-                e.setAttrs({
-                  // opacity: 0.3
-                  fill: ''
-                })
-              })
-              msg.tiles.forEach( (e) => {
-                let _ = Array.from(layer.map_group.children).find(_ => {
-                  return _.x() == (layer.center.x + e.x) * layer.scale && _.y() == (layer.center.y + e.y) * layer.scale
-                })
-                if (_) {
-                  switch (e.name) {
-                    case 'floor':
-                        _.setAttrs({
-                          content: [ e ],
-                          fill: 'maroon'
-                        })
-                      break
-                    case 'wall':
-                        _.setAttrs({
-                          content: [ e ],
-                          fill: 'grey'
-                        })
-                      break
-                    default :
-                        _.setAttrs({
-                          content: [ e ]
-                        })
-                  }
-                }
+            if (msg.add && msg.minus) {
+              console.log(msg.position[0] - this.user.position[0])
+              console.log(msg.position[1] - this.user.position[1])
+
+              let width = game.width % game.scale
+              let height = Math.floor( game.height / game.scale )
+              game.map_group.forEach( (e,i) => {
+                let x = i % width
+                let y = Math.floor(i / width)
+
+                // if (konva.layer.map_group[])
               })
 
               this.set('user.position', msg.position)
-
             }
 
+
+            // if (msg.add) {
+            //   console.log('add');
+            //   // layer.map_group.children.forEach( e => {
+            //   //   e.setAttrs({
+            //   //     opacity: 0.3,
+            //   //     // fill: ''
+            //   //   })
+            //   // })
+            //
+            //   msg.add.forEach( (e) => {
+            //     let _ = Array.from(layer.map_group.children).find(_ => {
+            //       return _.x() == (layer.center.x + e.x) * layer.scale && _.y() == (layer.center.y + e.y) * layer.scale
+            //     })
+            //     if (_) {
+            //       switch (e.name) {
+            //         case 'floor':
+            //             _.setAttrs({
+            //               content: [ e ],
+            //               opacity: 1,
+            //               fill: 'maroon'
+            //             })
+            //           break
+            //         case 'wall':
+            //             _.setAttrs({
+            //               content: [ e ],
+            //               opacity: 1,
+            //               fill: '#808080'
+            //             })
+            //           break
+            //         default :
+            //             _.setAttrs({
+            //               content: [ e ],
+            //               opacity: 1,
+            //               fill: '#f8f8f8'
+            //             })
+            //       }
+            //     }
+            //   })
+            // }
+            // if (msg.minus) {
+            //   msg.minus.forEach( (e) => {
+            //     let _ = Array.from(layer.map_group.children).find(_ => {
+            //       return _.x() == (layer.center.x + e.x) * layer.scale && _.y() == (layer.center.y + e.y) * layer.scale
+            //     })
+            //     if (_) {
+            //       switch (e.name) {
+            //         case 'floor':
+            //             _.setAttrs({
+            //               content: [ e ],
+            //               opacity: 0.3,
+            //               fill: 'maroon'
+            //             })
+            //           break
+            //         case 'wall':
+            //             _.setAttrs({
+            //               content: [ e ],
+            //               opacity: 0.3,
+            //               fill: '#808080'
+            //             })
+            //           break
+            //         default :
+            //             _.setAttrs({
+            //               content: [ e ],
+            //               opacity: 0.3,
+            //               fill: '#f8f8f8'
+            //             })
+            //       }
+            //     }
+            //   })
+            // }
             // layer.player.position( {
             //   x: layer.center.x * layer.scale,
             //   y: layer.center.y * layer.scale

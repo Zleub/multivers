@@ -9,6 +9,23 @@ import move from './Movement'
 import { computeFOV } from './FOV'
 import Wiki from './Wiki'
 
+import { writeFileSync } from 'fs'
+
+var Time = require('time-diff');
+var time = new Time();
+
+if (process.argv.find(e => e == '--log' || e == '-l'))
+  writeFileSync("multivers.log", "")
+var end = (name) => {
+  if (process.argv.find(e => e == '--log' || e == '-l'))
+    writeFileSync("multivers.log", `${new Date(Date.now()).toISOString()} ${name}: ${time.end(name, 'ms')}\n`, { flag: "a" })
+  else
+    console.log(`${new Date(Date.now()).toISOString()} ${name}: ${time.end(name, 'ms')}`)
+}
+
+time.start('init');
+
+
 const fs = require('fs')
 const express = require('express')
 const crypto = require('crypto')
@@ -23,7 +40,8 @@ const ws_app = expressWs(app)
 
 addPlayer(world, new Player(world, {
   name: "local",
-  ip: "127.0.0.1"
+  ip: "127.0.0.1",
+  position: [16, 16]
 }))
 
 // Tileset({
@@ -71,6 +89,7 @@ app.get('/me', isUser, (req : express$Request, res: express$Response) => {
   ws_app.ws('/' + player.token, function(ws, req) {
     connected = true
     ws.on('message', function(msg) {
+      time.start('ws');
       let position = [ player.position[0], player.position[1] ]
 
       if (msg == 'ArrowUp') {
@@ -89,11 +108,21 @@ app.get('/me', isUser, (req : express$Request, res: express$Response) => {
       if (position[0] != player.position[0] || position[1] != player.position[1]) {
         let fov = computeFOV(player.position)
 
+        let add = fov.filter(e => !player.fov.find(_ => _[0] == e[0] && _[1] == e[1]) )
+        let minus = player.fov.filter(e => !fov.find(_ => _[0] == e[0] && _[1] == e[1]) )
+        player.fov = fov
         ws.send(JSON.stringify({
           position: player.position,
           offset: player.offset,
-          tiles: world.map.filter( (e, x, y) => {
-              return fov.find( e => e[0] == x && e[1] == y) ? true : false
+          add: world.map.filter( (e, x, y) => {
+              return add.find( e => e[0] == x && e[1] == y) ? true : false
+          }).map(e => ({
+              name: e.name,
+              x: e.x - player.position[0],
+              y: e.y - player.position[1]
+            })),
+          minus: world.map.filter( (e, x, y) => {
+              return minus.find( e => e[0] == x && e[1] == y) ? true : false
           }).map(e => ({
               name: e.name,
               x: e.x - player.position[0],
@@ -107,6 +136,7 @@ app.get('/me', isUser, (req : express$Request, res: express$Response) => {
           offset: player.offset
         }))
       }
+      end('ws');
     });
   })
   setTimeout(() => {
@@ -126,20 +156,26 @@ app.get('/me', isUser, (req : express$Request, res: express$Response) => {
  */
 app.get('/world', (req : express$Request, res: express$Response) => {
   // const user = JSON.parse(req.headers.user)
+  time.start('world');
   const player = world.players.filter(e => e.name == "local")[0]
 
   // const fov = 16
 
   let fov = computeFOV(player.position)
+  // console.log( fov.filter(e => !player.fov.find(_ => _[0] == e[0] && _[1] == e[1]) ) )
+
+  player.fov = fov
   res.end(JSON.stringify({
-    world: world.map.filter( (e, x, y) => {
-        return fov.find( e => e[0] == x && e[1] == y) ? true : false
+    add: world.map.filter( (e, x, y) => {
+        return player.fov.find( e => e[0] == x && e[1] == y) ? true : false
     }).map(e => ({
         name: e.name,
         x: e.x - player.position[0],
         y: e.y - player.position[1]
       }))
   }))
+  end('world');
+
   // res.end( JSON.stringify({
   //   world: world.map.filter( (e, i) => {
   //     const x = i % world.limits.width
@@ -178,5 +214,6 @@ app.get('/wiki', isUser, (req: express$Request, res: express$Response) => {
 })
 
 console.log(Wiki)
+end('init');
 
 app.listen(4242, 'localhost')
