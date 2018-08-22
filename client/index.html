@@ -1,24 +1,113 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
 
-    <title>client</title>
-    <meta name="description" content="client description">
+  <title>client</title>
+  <meta name="description" content="client description">
 
-    <!-- See https://goo.gl/OOhYW5 -->
-    <link rel="manifest" href="/manifest.json">
+  <style>
+  body {
+    font-family: Monospace;
+    background-color: #000;
+    color: #fff;
+    margin: 0px;
+    overflow: hidden;
+  }
+  </style>
 
-    <script src=https://cdn.rawgit.com/konvajs/konva/2.1.7/konva.min.js></script>
-    <script src="/node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
+  <script type="text/javascript" src="https://threejs.org/build/three.js"></script>
+  <script type="text/javascript" src="FirstPersonControls.js"></script>
+  <script type="text/javascript" src="OrbitControls.js"></script>
+  <script type="text/javascript" src="src/client-app/util.js"></script>
+</head>
+<body>
+  <script>
+  var camera, scene, renderer, stats;
+  var pointLights = []
 
-    <script src="/src/client-app/konva.js"></script>
-    <script src="/src/client-app/game.js"></script>
-    <script src="/src/client-app/util.js"></script>
-    <script type="module" src="/src/client-app/client-app.js"></script>
-  </head>
-  <body>
-    <client-app></client-app>
-  </body>
+  function generateTexture() {
+    var canvas = document.createElement( 'canvas' );
+    canvas.width = 2;
+    canvas.height = 2;
+    var context = canvas.getContext( '2d' );
+    context.fillStyle = 'white';
+    context.fillRect( 0, 1, 2, 1 );
+    return canvas;
+  }
+
+  function render() {
+    renderer.render(scene, camera)
+  }
+
+  camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
+  camera.position.set( 0, 40, 0 );
+
+  scene = new THREE.Scene();
+  scene.add( new THREE.AmbientLight( 0x111111 ) );
+
+  var light = new THREE.PointLight( 0x0088ff, 1, 100 );
+  light.position.set( 0, 10, 0 );
+  scene.add( light );
+
+  var geometry = new THREE.BoxBufferGeometry( 0.8, 0.8, 0.8 );
+  var material = new THREE.MeshPhongMaterial( {
+    color: 0xa0adaf,
+    // wireframe: true
+  } );
+
+  fetchMultivers('/world').then( res => res.json().then( e => {
+    e.add.forEach(_ => {
+      var mesh = new THREE.Mesh( geometry, material );
+      mesh.position.x = _.x - 16;
+      mesh.position.z = _.y - 16;
+      mesh.receiveShadow = true;
+      scene.add( mesh );
+
+      if (_.name == 'wall') {
+        var _material = new THREE.MeshPhongMaterial( {
+          color: 0x606d6f,
+          // wireframe: true
+        } );
+        for (var i = 0; i < 4; i++) {
+          var mesh = new THREE.Mesh( geometry, _material );
+          mesh.position.x = _.x - 16;
+          mesh.position.y = i
+          mesh.position.z = _.y - 16;
+          mesh.receiveShadow = true;
+          scene.add( mesh );
+        }
+      }
+
+    })
+  }))
+
+  renderer = new THREE.WebGLRenderer( { antialias: true } );
+
+  renderer.setPixelRatio( window.devicePixelRatio );
+  renderer.setSize( window.innerWidth, window.innerHeight );
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.BasicShadowMap;
+  document.body.appendChild( renderer.domElement );
+
+  var controls = new THREE.OrbitControls( camera, renderer.domElement );
+
+  controls.target.set( 0, 0, 0 );
+  controls.update();
+
+  var clock = new THREE.Clock()
+  function animate() {
+    var delta = clock.getDelta()
+    controls.update(delta)
+
+    render();
+    requestAnimationFrame( animate );
+  }
+
+  animate()
+
+  </script>
+</body>
+
 </html>

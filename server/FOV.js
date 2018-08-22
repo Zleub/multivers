@@ -9,7 +9,7 @@ type Slope = {
   y: number
 }
 
-export const range = 16
+export const range = 32
 
 export function computeFOV(origin: Array<number>, rangeLimit?: number ) : FOV_t {
   let fov = [ origin ]
@@ -21,7 +21,7 @@ export function computeFOV(origin: Array<number>, rangeLimit?: number ) : FOV_t 
   let BlocksLight = (x, y) => {
     if (!world.map.map[x])
       return false
-      
+
     let _ = world.map.map[x][y]
 
     if (_ && _.name != 'floor')

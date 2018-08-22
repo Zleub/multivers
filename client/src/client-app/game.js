@@ -59,8 +59,8 @@ class Game {
     fetchMultivers('/world').then(e => e.json().then(res => {
         res.add.forEach( (e) => {
           let _ = Array.from(this.map_group.children).find(_ => {
-            return _.x() == (this.center.x + e.x) * this.scale
-              && _.y() == (this.center.y + e.y) * this.scale
+            return _.x() == (e.x - this.user.position[0] + this.center.x) * this.scale
+              && _.y() == (e.y - this.user.position[1] + this.center.y) * this.scale
           })
           if (_) {
             switch (e.name) {
@@ -87,9 +87,39 @@ class Game {
           }
         })
 
+        this.setListeners()
         this.layer.draw()
     }))
 
+    this.socket = new WebSocket('ws://localhost:4242/' + this.user.token);
+    this.socket.addEventListener('open', (event) => {
+      this.socket.send('Hello Server!');
+    });
+    this.socket.addEventListener('message', (event) => {
+      const msg = JSON.parse(event.data)
+      this.user.offset = msg.offset
+
+      if (msg.add && msg.minus) {
+        console.log(msg.position[0] - this.user.position[0])
+        console.log(msg.position[1] - this.user.position[1])
+
+        let width = this.width % this.scale
+        let height = Math.floor( this.height / this.scale )
+        this.map_group.children.forEach( (e,i) => {
+          let x = i % width
+          let y = Math.floor(i / width)
+
+          // if (konva.layer.map_group[])
+        })
+
+        this.user.position = msg.position
+      }
+
+      this.player.offsetX(this.user.offset[0])
+      this.player.offsetY(this.user.offset[1])
+      this.layer.draw()
+
+    })
   }
 
   setListeners() {

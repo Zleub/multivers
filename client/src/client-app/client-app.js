@@ -2,6 +2,8 @@ import {html, PolymerElement} from '@polymer/polymer/polymer-element.js';
 import '@polymer/iron-ajax/iron-ajax.js';
 import '@polymer/iron-localstorage/iron-localstorage.js';
 
+var createGame = require('voxel-engine')
+
 /**
  * @customElement
  * @polymer
@@ -66,125 +68,15 @@ class ClientApp extends PolymerElement {
   ready() {
     super.ready()
 
-    fetchMultivers('/me').then( (response) => {
-      response.json().then(e => {
-        if ( JSON.stringify(e) != JSON.stringify(this.user) )
-          this.set('user', e)
-
-          let game = new Game(this.$.container, e)
-          // let layer = setupKonva.call(this)
-          this.socket = new WebSocket('ws://localhost:4242/' + this.user.token);
-          this.socket.addEventListener('open', (event) => {
-            this.socket.send('Hello Server!');
-          });
-          this.socket.addEventListener('message', (event) => {
-            const msg = JSON.parse(event.data)
-            this.set('user.offset', msg.offset)
-
-            if (msg.add && msg.minus) {
-              console.log(msg.position[0] - this.user.position[0])
-              console.log(msg.position[1] - this.user.position[1])
-
-              let width = game.width % game.scale
-              let height = Math.floor( game.height / game.scale )
-              game.map_group.forEach( (e,i) => {
-                let x = i % width
-                let y = Math.floor(i / width)
-
-                // if (konva.layer.map_group[])
-              })
-
-              this.set('user.position', msg.position)
-            }
-
-
-            // if (msg.add) {
-            //   console.log('add');
-            //   // layer.map_group.children.forEach( e => {
-            //   //   e.setAttrs({
-            //   //     opacity: 0.3,
-            //   //     // fill: ''
-            //   //   })
-            //   // })
-            //
-            //   msg.add.forEach( (e) => {
-            //     let _ = Array.from(layer.map_group.children).find(_ => {
-            //       return _.x() == (layer.center.x + e.x) * layer.scale && _.y() == (layer.center.y + e.y) * layer.scale
-            //     })
-            //     if (_) {
-            //       switch (e.name) {
-            //         case 'floor':
-            //             _.setAttrs({
-            //               content: [ e ],
-            //               opacity: 1,
-            //               fill: 'maroon'
-            //             })
-            //           break
-            //         case 'wall':
-            //             _.setAttrs({
-            //               content: [ e ],
-            //               opacity: 1,
-            //               fill: '#808080'
-            //             })
-            //           break
-            //         default :
-            //             _.setAttrs({
-            //               content: [ e ],
-            //               opacity: 1,
-            //               fill: '#f8f8f8'
-            //             })
-            //       }
-            //     }
-            //   })
-            // }
-            // if (msg.minus) {
-            //   msg.minus.forEach( (e) => {
-            //     let _ = Array.from(layer.map_group.children).find(_ => {
-            //       return _.x() == (layer.center.x + e.x) * layer.scale && _.y() == (layer.center.y + e.y) * layer.scale
-            //     })
-            //     if (_) {
-            //       switch (e.name) {
-            //         case 'floor':
-            //             _.setAttrs({
-            //               content: [ e ],
-            //               opacity: 0.3,
-            //               fill: 'maroon'
-            //             })
-            //           break
-            //         case 'wall':
-            //             _.setAttrs({
-            //               content: [ e ],
-            //               opacity: 0.3,
-            //               fill: '#808080'
-            //             })
-            //           break
-            //         default :
-            //             _.setAttrs({
-            //               content: [ e ],
-            //               opacity: 0.3,
-            //               fill: '#f8f8f8'
-            //             })
-            //       }
-            //     }
-            //   })
-            // }
-            // layer.player.position( {
-            //   x: layer.center.x * layer.scale,
-            //   y: layer.center.y * layer.scale
-            // })
-            layer.player.offsetX(this.user.offset[0])
-            layer.player.offsetY(this.user.offset[1])
-            layer.draw()
-            // layer.player.position({
-            //   x: msg.position[0] * 16,
-            //   y: msg.position[1] * 16
-            // })
-          });
-
-
-
-      })
-    })
+    var game = createGame()
+    game.appendTo(document.body)
+    // fetchMultivers('/me').then( (response) => {
+    //   response.json().then(e => {
+    //     if ( JSON.stringify(e) != JSON.stringify(this.user) )
+    //       this.set('user', e)
+    //     let game = new Game(this.$.container, this.user)
+    //   })
+    // })
   }
 }
 

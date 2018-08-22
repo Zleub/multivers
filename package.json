@@ -4,7 +4,7 @@
   "description": "",
   "main": "cli.js",
   "scripts": {
-    "start": "npm run build && node build/server/main.js",
+    "start": "npm run server && node build/server/main.js",
     "watch": "nodemon . -x \"npm run start\" -i build -i docs -i apidoc -i flow_coverage",
     "build": "npm run client && npm run server",
     "extra": "npm run doc && npm run coverage",
@@ -36,6 +36,8 @@
     "babel-cli": "^6.26.0",
     "babel-preset-flow": "^6.23.0",
     "babel-preset-latest": "^6.24.1",
+    "beefy": "^2.1.8",
+    "browserify": "^16.2.2",
     "flow-bin": "^0.77.0",
     "flow-typed": "^2.5.1",
     "polymer-cli": "^1.8.0"

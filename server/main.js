@@ -71,7 +71,10 @@ let isUser = (req: express$Request, res, next) => {
  * @apiGroup All
  */
 app.get('/', (req : express$Request, res: express$Response) =>
-  fs.readFile('./build/client/index.html', (err, data) => res.end(data))
+  fs.readFile('./client/index.html', (err, data) => res.end(data))
+)
+app.get(/(.+\.(html|js))/, (req : express$Request, res: express$Response) =>
+  fs.readFile(`./client/${req.params['0']}`, (err, data) => res.end(data))
 )
 
 const scale = 16
@@ -157,7 +160,7 @@ app.get('/me', isUser, (req : express$Request, res: express$Response) => {
 app.get('/world', (req : express$Request, res: express$Response) => {
   // const user = JSON.parse(req.headers.user)
   time.start('world');
-  const player = world.players.filter(e => e.name == "local")[0]
+  const player = world.players.filter(e => e.ip == req.connection.remoteAddress)[0]
 
   // const fov = 16
 
@@ -166,12 +169,14 @@ app.get('/world', (req : express$Request, res: express$Response) => {
 
   player.fov = fov
   res.end(JSON.stringify({
+    position: player.position,
+    offset: player.offset,
     add: world.map.filter( (e, x, y) => {
         return player.fov.find( e => e[0] == x && e[1] == y) ? true : false
     }).map(e => ({
         name: e.name,
-        x: e.x - player.position[0],
-        y: e.y - player.position[1]
+        x: e.x,
+        y: e.y
       }))
   }))
   end('world');
