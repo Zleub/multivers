@@ -36,8 +36,9 @@ class Map {
     }
     console.log(this.map[16][16])
 
-    for (var i = 0; i < 10; i++) {
-      this.map[i][10].name = 'wall'
+    for (var i = 0; i < size; i++) {
+      if (i % 3 == 0)
+        this.map[i][size / 4].name = 'wall'
     }
 
     for (var i = 0; i < size; i++) {

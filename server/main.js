@@ -41,7 +41,7 @@ const ws_app = expressWs(app)
 addPlayer(world, new Player(world, {
   name: "local",
   ip: "127.0.0.1",
-  position: [16, 16]
+  // position: [16, 16]
 }))
 
 // Tileset({

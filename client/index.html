@@ -42,13 +42,13 @@
   }
 
   camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
-  camera.position.set( 0, 40, 0 );
+  camera.position.set( 0, 4, 0 );
 
   scene = new THREE.Scene();
   scene.add( new THREE.AmbientLight( 0x111111 ) );
 
   var light = new THREE.PointLight( 0x0088ff, 1, 100 );
-  light.position.set( 0, 10, 0 );
+  light.position.set( 0, 4, 0 );
   scene.add( light );
 
   var geometry = new THREE.BoxBufferGeometry( 0.8, 0.8, 0.8 );
@@ -60,8 +60,8 @@
   fetchMultivers('/world').then( res => res.json().then( e => {
     e.add.forEach(_ => {
       var mesh = new THREE.Mesh( geometry, material );
-      mesh.position.x = _.x - 16;
-      mesh.position.z = _.y - 16;
+      mesh.position.x = _.x - e.position[0];
+      mesh.position.z = _.y - e.position[1];
       mesh.receiveShadow = true;
       scene.add( mesh );
 
@@ -72,9 +72,9 @@
         } );
         for (var i = 0; i < 4; i++) {
           var mesh = new THREE.Mesh( geometry, _material );
-          mesh.position.x = _.x - 16;
+          mesh.position.x = _.x - e.position[0];
           mesh.position.y = i
-          mesh.position.z = _.y - 16;
+          mesh.position.z = _.y - e.position[1];
           mesh.receiveShadow = true;
           scene.add( mesh );
         }
@@ -93,7 +93,7 @@
 
   var controls = new THREE.OrbitControls( camera, renderer.domElement );
 
-  controls.target.set( 0, 0, 0 );
+  controls.target.set( 0, 4, 0 );
   controls.update();
 
   var clock = new THREE.Clock()
