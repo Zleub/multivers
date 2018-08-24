@@ -1,10 +1,10 @@
 [ignore]
-  flow-coverage/**
-  flow-typed/**
-  node_modules/**
-  build/**
-  docs/**
-  assets/**
+  .*/flow-coverage/.*
+  .*/flow-typed/.*
+  .*/build/.*
+  .*/docs/.*
+  .*/assets/.*
+  .*/node_modules/.*
 [include]
 
 [libs]

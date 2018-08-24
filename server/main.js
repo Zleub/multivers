@@ -65,6 +65,10 @@ let isUser = (req: express$Request, res, next) => {
   }
 }
 
+function flattenDeep(arr1) {
+   return arr1.reduce((acc, val) => Array.isArray(val) ? acc.concat(flattenDeep(val)) : acc.concat(val), []);
+}
+
 /**
  * @api {get} / root
  * @apiName Root
@@ -168,18 +172,19 @@ app.get('/world', (req : express$Request, res: express$Response) => {
   // console.log( fov.filter(e => !player.fov.find(_ => _[0] == e[0] && _[1] == e[1]) ) )
 
   player.fov = fov
-  res.end(JSON.stringify({
+
+  let _ = JSON.stringify({
     position: player.position,
     offset: player.offset,
-    add: world.map.filter( (e, x, y) => {
+    add: flattenDeep(world.map.map).filter(e => e.name != 'air') /* .filter( (e, x, y) => {
         return player.fov.find( e => e[0] == x && e[1] == y) ? true : false
     }).map(e => ({
         name: e.name,
         x: e.x,
         y: e.y
-      }))
-  }))
-  end('world');
+      })) */
+  })
+  res.end(_, () => end('world'))
 
   // res.end( JSON.stringify({
   //   world: world.map.filter( (e, i) => {
