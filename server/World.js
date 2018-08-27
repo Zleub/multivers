@@ -27,7 +27,7 @@ class World {
 
     Object.assign(this, {
       players : [],
-      spawn : [Math.floor(map.limits.width / 2), Math.floor(map.limits.height / 2)],
+      spawn : [Math.floor(map.limits.width / 2), Math.floor(map.limits.depth / 2)],
       map : map,
       tiles : config.reduce( (p,e) => {
           p[e.name] = e

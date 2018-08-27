@@ -1,8 +1,11 @@
 /* @flow */
 
-export const width = 32
+import OpenSimplexNoise from 'open-simplex-noise'
+export const openSimplex = new OpenSimplexNoise(Date.now())
+
+export const width = 128
 export const height = 32
-export const depth = 32
+export const depth = 128
 
 export const offset = 16
 
@@ -20,8 +23,11 @@ class Map {
   limits: Limit_t
   map: Array< Array< Array< Cell_t > > >
 
+  shallow_map: Array< Array< Cell_t > >
+
   constructor(limits?: Limit_t) {
     this.map = []
+    this.shallow_map = []
     this.limits = limits || {
       width: width,
       height: height,
@@ -31,26 +37,37 @@ class Map {
 
     for (var x = 0; x <= this.limits.width; x++) {
       this.map.push([])
-      for (var y = 0; y <= this.limits.height; y++) {
+      this.shallow_map.push([])
+      for (var z = 0; z <= this.limits.depth; z++) {
         this.map[x].push([])
-        for (var z = 0; z <= this.limits.depth; z++) {
-          if ( Math.floor( Math.sin(x / 8) * Math.sin(y / 8) * 10) == 0 )
-            this.map[x][y].push({
-              name: 'floor',
-              x: x,
-              y: y,
-              z: z
-            })
-          else
-            this.map[x][y].push({
-              name: 'air',
-              x: x,
-              y: y,
-              z: z
-            })
+        for (var y = 0; y <= this.limits.height; y++) {
+          this.map[x][z].push({
+            name: 'air',
+            x: x,
+            y: z,
+            z: y
+          })
         }
       }
     }
+
+    for (var x = 0; x <= this.limits.width; x++) {
+      for (var y = 0; y <= this.limits.depth; y++) {
+        let value = Math.floor( (openSimplex.noise2D( x / 40, y / 40) + 0.8) * height / 4)
+        if (value < 0)
+          value = 0
+        // console.log(value)
+        this.map[x][value][y] = {
+          name: 'floor',
+          x: x,
+          y: value,
+          z: y
+        }
+
+        this.shallow_map[x][y] = this.map[x][value][y]
+      }
+    }
+
 
     // for (var i = 0; i < width; i++) {
     //   if (i % 3 == 0)
