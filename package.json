@@ -6,13 +6,11 @@
   "scripts": {
     "start": "npm run server && node build/server/main.js",
     "watch": "nodemon . -x \"npm run start\" -i build -i docs -i apidoc -i flow_coverage",
-    "build": "npm run client && npm run server",
     "extra": "npm run doc && npm run coverage",
-    "apidoc": "apidoc -i server/ -o docs/apidoc",
+    "apidoc": "apidoc -i server/ -f '.*\\.flow' -o docs/apidoc",
     "jsdoc": "documentation build -f html -o docs/reference ./server/**/*.js --document-exported",
     "doc": "rm -rf docs; mkdir docs; npm run apidoc && npm run jsdoc",
-    "coverage": "flow-coverage-report -c 8 -i '*.js' -i '**/*.js' -x 'flow-*/**' -x 'node_modules/**' -x 'build/**' -x 'docs/**' -x 'client/node_modules/**' -x 'client/test/**'",
-    "client": "polymer build --root client/ --bundle && mv build/default/client build/client && rm -rf build/default",
+    "coverage": "flow-coverage-report -c 8 -i '**/*.flow'",
     "server": "babel server/ -d build/server"
   },
   "repository": {

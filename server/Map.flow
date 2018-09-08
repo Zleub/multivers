@@ -3,9 +3,9 @@
 import OpenSimplexNoise from 'open-simplex-noise'
 export const openSimplex = new OpenSimplexNoise(Date.now())
 
-export const width = 128
+export const width = 32 * 4
 export const height = 32
-export const depth = 128
+export const depth = 32 * 4
 
 export const offset = 16
 
