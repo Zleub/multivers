@@ -51,11 +51,12 @@ addPlayer(world, new Player(world, {
 // })
 
 let debug = (req: express$Request, res, next) => {
-  // console.log(`${req.url}: ${JSON.stringify(req.headers.user, null, 2)}`)
+  console.log(`${req.url}: ${req.headers.user ? req.headers.user.name : "no user defined"}`)
   next()
 }
 
 app.use(debug)
+console.log('test')
 
 /** What yp ? */
 let isUser = (req: express$Request, res, next) => {
@@ -75,12 +76,9 @@ function flattenDeep(arr1) {
  * @apiName Root
  * @apiGroup All
  */
-app.get('/', (req : express$Request, res: express$Response) =>
-  fs.readFile('./client/index.html', (err, data) => res.end(data))
-)
-app.get(/(.+\.(html|js))/, (req : express$Request, res: express$Response) =>
-  fs.readFile(`./client/${req.params['0']}`, (err, data) => res.end(data))
-)
+app.use('/', express.static('client'))
+app.use('/api', express.static('docs/apidoc'))
+app.use('/doc', express.static('docs/reference'))
 
 const scale = 16
 
