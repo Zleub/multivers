@@ -8,7 +8,7 @@
     "watch": "nodemon . -e .flow -x \"npm run start\" -i build -i docs -i apidoc -i flow_coverage",
     "extra": "npm run doc && npm run coverage",
     "apidoc": "apidoc -i server/ -f '.*\\.flow' -o docs/apidoc",
-    "jsdoc": "documentation build -f html -o docs/reference ./server/**/*.flow --document-exported",
+    "jsdoc": "documentation build -f html -o docs/reference ./server/*.flow ./server/**/*.flow --document-exported",
     "doc": "rm -rf docs; mkdir docs; npm run apidoc && npm run jsdoc",
     "coverage": "flow-coverage-report -c 8 -i '**/*.flow'",
     "server": "babel -x .flow server/ -d build/server"

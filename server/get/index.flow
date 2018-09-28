@@ -1,0 +1,12 @@
+/* @flow */
+
+import {basename} from 'path'
+import {app} from '../express'
+
+require('fs').readdir(__dirname, (err, data) => {
+  data.forEach(e => {
+    if (!err && e != basename(__filename)) {
+      app.get(`/${basename(e, '.js')}`, require(`./${e}`).default)
+    }
+  })
+})
