@@ -11,65 +11,58 @@ const keys_code_to_name = {
   39: 'right',
   68: 'd',
 
-  32: 'space'
+  32: 'space',
+  16: 'leftShift'
 }
-
-const keys_name_to_code = Object.entries(keys_code_to_name).reduce( (p, [k,v]) => {
-  p[v] = Number(k)
-  return p
-}, {} )
-
-const keys = Object.entries(keys_code_to_name).reduce( (p, [k,v]) => {
-  p[v] = false
-  return p
-}, {} )
 
 const keys_alias = {
-  up: {
-    codes: [38, 87]
-  },
-  left: {
-    codes: [37, 65]
-  },
-  down: {
-    codes: [49, 83]
-  },
-  right: {
-    codes: [39, 68]
-  },
-  jump: {
-    codes: [32]
-  }
+  forward: [38, 87],
+  left: [37, 65],
+  backward: [49, 83],
+  right: [39, 68],
+  up: [32],
+  down: [16],
+  jump: [32]
 }
+
+let keys = Object.entries(keys_alias).reduce( (p, [k,v]) => {
+  p[k] = false
+  return p
+}, {} )
 
 const keys_press = {
   jump : () => {
-    if ( canJump === true )
-      velocity.y += 80;
-    canJump = false;
+    // if ( canJump === true )
+    //   velocity.y += 80;
+    // canJump = false;
   }
 }
 
 const solve_alias = function (code) {
   return Object.entries(keys_alias).reduce( (p, [k,v]) => {
-    if (v.codes.find(e => e == code))
-      return k
-    else
+    if (v.find(e => e == code)) {
+      console.log(`found ${k} for ${code}`)
+      p.push(k)
+    }
       return p
-  }, null )
+  }, [] )
 }
 
 const onKeyUp = function ( event ) {
-  keys[ solve_alias(event.keyCode) ] = false
+  solve_alias(event.keyCode).forEach(e => keys[ e ] = false)
 }
 
 const onKeyDown = function ( event ) {
-  if ( controlsEnabled === false )
+  if ( controlsEnabled === false && run)
     document.body.requestPointerLock()
 
-  keys[ solve_alias(event.keyCode) ] = true
+  solve_alias(event.keyCode).forEach(e => keys[ e ] = true)
+  console.dir(keys)
 };
 
 const onKeyPress = function ( event ) {
-  keys_press[ solve_alias(event.keyCode) ]()
+  solve_alias(event.keyCode).forEach(e => {
+    if (keys_press[ e ])
+      keys_press[ e ]()
+  })
 }

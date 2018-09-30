@@ -43,71 +43,28 @@ let debug = (req: express$Request, res, next) => {
   next()
 }
 
-process.argv.push('-c', 'jingo.yaml')
-console.log(process.argv)
+app.use(debug)
 
-let jingo = require('./jingo').default
-// import jingo from 'jingo'
+/**
+ * @api {get} / root
+ * @apiName Root
+ * @apiGroup All
+ */
+app.use('/', express.static('client'))
+app.use('/api', express.static('docs/apidoc'))
+app.use('/doc', express.static('docs/reference'))
+// app.use('/wiki', jingo_app)
 
-jingo.on('ready', jingo_app => {
+require('./get').default(app)
 
-  app.use(debug)
-
-  /**
-   * @api {get} / root
-   * @apiName Root
-   * @apiGroup All
-   */
-  app.use('/', express.static('client'))
-  app.use('/api', express.static('docs/apidoc'))
-  app.use('/doc', express.static('docs/reference'))
-  app.use('/wiki', jingo_app)
-
-  require('./get').default(app)
-
-  /**
-   * @api {get} /tile/:name Access a particular tile
-   * @apiName tile
-   * @apiGroup User
-   */
-  app.get('/tile/:name', isUser, (req: express$Request, res: express$Response) => {
-    // console.log(world.tiles, req.params.name)
-    res.end( JSON.stringify(world.tiles[req.params.name]) )
-  })
-
-  app.listen(4242, 'localhost')
-
-  end('init');
-
+/**
+ * @api {get} /tile/:name Access a particular tile
+ * @apiName tile
+ * @apiGroup User
+ */
+app.get('/tile/:name', isUser, (req: express$Request, res: express$Response) => {
+  // console.log(world.tiles, req.params.name)
+  res.end( JSON.stringify(world.tiles[req.params.name]) )
 })
 
-// console.log('Hello', jingo)
-// console.log('Hello', app === ws_app)
-
-// let jingo = require('child_process').spawn('jingo', ['-c', 'jingo.yaml'])
-// jingo.stdout.on('data', (data) => {
-//   process.stdout.write(`jingo stdout: ${data}`);
-// });
-//
-// jingo.stderr.on('data', (data) => {
-//   process.stdout.write(`jingo stderr: ${data}`);
-// });
-//
-// jingo.on('close', (code) => {
-//   process.stdout.write(`child process exited with code ${code}`);
-// });
-//
-// setTimeout(function () {
-//   require('child_process').exec(`curl -L --cookie-jar jarfile --data "username=adebray&password=asd" http://localhost:6067/login`, (err, stdout, stderr) => {
-//     // console.log(stdout)
-//     console.log(stderr)
-//     require('child_process').exec(`curl -L --cookie jarfile \
-//       --header 'content-type: application/x-www-form-urlencoded' \
-//       --data 'pageTitle=Home&_method=put&content=ready&message=' \
-//       http://localhost:6067/pages/Home`, (err, stdout, stderr) => {
-//         console.log(stdout)
-//         console.log(stderr)
-//       }
-//     )
-//   })
-// }, 4000);
+app.listen(4242, 'localhost', () => end('init'));

@@ -58,8 +58,8 @@
   var controlsEnabled = false;
   var canJump = false;
   var prevTime = performance.now();
-  var velocity = new THREE.Vector3();
-  var direction = new THREE.Vector3();
+  var velocity = new THREE.Vector3(0, 0, 0);
+  var direction = new THREE.Vector3(0, 0, 0);
   var camera, scene, renderer, stats;
   var Cubecount = 0
 
@@ -74,7 +74,7 @@
   camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
   var controls = new THREE.PointerLockControls( camera );
   scene.add( controls.getObject() )
-  controls.getObject().position.set(0, 10, 0)
+  controls.getObject().position.set(0, 0, 0)
 
   var pointerlockchange = function ( event ) {
       console.log('pointerlockchange')
@@ -120,26 +120,25 @@
       var delta = 0.01;
       // console.log(delta)
       velocity.x -= velocity.x * 10 * delta;
+      velocity.y -= velocity.y * 10 * delta; // 100.0 = mass
       velocity.z -= velocity.z * 10 * delta;
-      velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
-      direction.z = Number( keys.up ) - Number( keys.down );
+
       direction.x = Number( keys.left ) - Number( keys.right );
+      direction.y = Number( keys.down ) - Number( keys.up );
+      direction.z = Number( keys.forward ) - Number( keys.backward );
       direction.normalize(); // this ensures consistent movements in all directions
-      if ( keys.up || keys.down ) velocity.z -= direction.z * 400.0 * delta;
-      if ( keys.left || keys.right ) velocity.x -= direction.x * 400.0 * delta;
-      if ( onObject === true ) {
-        velocity.y = Math.max( 0, velocity.y );
-        controls.getObject().position.y = intersections[0].object.position.y + intersections[0].object.scale.y + 1
-        canJump = true;
-      }
+
+      if ( keys.left || keys.right )
+        velocity.x -= direction.x * 400.0 * delta;
+      if ( keys.up || keys.down )
+        velocity.y -= direction.y * 400.0 * delta;
+      if ( keys.forward || keys.backward )
+        velocity.z -= direction.z * 400.0 * delta;
+
       controls.getObject().translateX( velocity.x * delta );
       controls.getObject().translateY( velocity.y * delta );
       controls.getObject().translateZ( velocity.z * delta );
-      // if ( controls.getObject().position.y < 1 ) {
-      //   velocity.y = 0;
-      //   controls.getObject().position.y = 1;
-      //   canJump = true;
-      // }
+
       prevTime = time;
     }
     // else {
@@ -154,7 +153,7 @@
   var geometry = new THREE.BoxBufferGeometry( 1, 1, 1 );
   var materialGray = new THREE.MeshLambertMaterial( {
     color: 0xa0adaf,
-    wireframe: false
+    wireframe: true
   } );
   var materialGreen = new THREE.MeshLambertMaterial( {
     color: 0xa0ddaf,
@@ -169,7 +168,7 @@
     wireframe: false
   } );
 
-  fetchMultivers('/sharpen').then( res => res.json().then( e => {
+  fetchMultivers('/world').then( res => res.json().then( e => {
     e.add.forEach(_ => {
       var mesh = new THREE.Mesh( geometry, materialGray )
 

@@ -3,17 +3,18 @@
 import OpenSimplexNoise from 'open-simplex-noise'
 export const openSimplex = new OpenSimplexNoise(Date.now())
 
-export const width = 32 * 4
-export const height = 32
-export const depth = 32 * 4
+export const width = 16 * 3
+export const height = 256 / 2
+export const depth = 16 * 3
 
 export const offset = 16
 
 type Cell_t = {
-    name: string,
     x: number,
     y: number,
-    z: number
+    z: number,
+
+    name: string
 }
 
 export type Limit_t = { width: number, height: number, depth: number }
@@ -53,10 +54,16 @@ class Map {
 
     for (var x = 0; x <= this.limits.width; x++) {
       for (var y = 0; y <= this.limits.depth; y++) {
-        let value = Math.floor( (openSimplex.noise2D( x / 40, y / 40) + 0.8) * height / 4)
-        if (value < 0)
-          value = 0
+        let value = Math.floor( (openSimplex.noise2D( x / 40, y / 40)) * height / 4)
+        if (value < 1)
+          value = 1
         // console.log(value)
+        this.map[x][value - 1][y] = {
+          name: 'floor',
+          x: x,
+          y: value - 1,
+          z: y
+        }
         this.map[x][value][y] = {
           name: 'floor',
           x: x,
