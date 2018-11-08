@@ -4,14 +4,15 @@
   "description": "",
   "main": "cli.js",
   "scripts": {
-    "start": "npm run server && node build/server/main.js",
-    "watch": "nodemon . -e .flow -x \"npm run start\" -i build -i docs -i apidoc -i flow_coverage",
+    "all": "yarn extra ; yarn start",
+    "server": "babel -x .flow server/ -d build/server",
+    "start": "yarn server && node build/server/main.js",
+    "watch": "nodemon . -e .flow -x \"yarn start\" -i build -i docs -i apidoc -i flow_coverage",
     "extra": "npm run doc && npm run coverage",
+    "doc": "rm -rf docs; mkdir docs; npm run apidoc && npm run jsdoc",
     "apidoc": "apidoc -i server/ -f '.*\\.flow' -o docs/apidoc",
     "jsdoc": "documentation build -f html -o docs/reference ./server/*.flow ./server/**/*.flow --document-exported",
-    "doc": "rm -rf docs; mkdir docs; npm run apidoc && npm run jsdoc",
-    "coverage": "flow-coverage-report -c 8 -i '**/*.flow'",
-    "server": "babel -x .flow server/ -d build/server"
+    "coverage": "flow-coverage-report -c 8 -i '**/*.flow'"
   },
   "repository": {
     "type": "git",
@@ -28,6 +29,7 @@
     "express-ws": "^4.0.0",
     "jingo": "^1.8.5",
     "open-simplex-noise": "^1.5.0",
+    "ramda": "^0.25.0",
     "time-diff": "^0.3.1",
     "ws": "^6.0.0",
     "xml2js": "^0.4.19"

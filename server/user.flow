@@ -1,0 +1,33 @@
+/* @flow */
+
+import R from 'ramda'
+
+export const makeUser = (name, ip) => {
+  let _ = {
+    name,
+    ip,
+
+    people: 1,
+    peopleList: [],
+
+    state: 'idle',
+    location: 'spawn',
+
+    gold: 0,
+    events: [],
+
+    connected: false,
+    ws: null
+  }
+
+  // _.peopleList.push(_)
+  return _
+}
+
+export let users = [ makeUser('localhost', '127.0.0.1') ]
+
+export const user_to_string = user => JSON.stringify(R.omit([
+  'connected',
+  'ip',
+  'ws',
+], user), "  ", 2)

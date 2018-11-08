@@ -1,70 +1,114 @@
 /* @flow */
 
-import {end, time, flattenDeep} from './utils'
-
-import Drawable, {config, type Drawable_t} from './Drawable'
-import Tileset from './Tileset'
-import Player from './Player'
-import World, {world, addPlayer} from './World'
-import {openSimplex} from './Map'
-import move from './Movement'
-import { computeFOV } from './FOV'
-import Wiki from './Wiki'
-
+import crypto from 'crypto'
 import fs, { writeFileSync } from 'fs'
 
+import R from 'ramda'
+
 import express from 'express'
-import {app, ws_app} from './express'
+import { app, ws_app } from './express'
+
+import { users, user_to_string } from './user'
+// import { states } from './state'
 
 if (process.argv.find(e => e == '--log' || e == '-l'))
   writeFileSync("multivers.log", "")
 
-addPlayer(world, new Player(world, {
-  name: "local",
-  ip: "127.0.0.1",
-}))
-
-// Tileset({
-//   path: 'assets/lpc-terrains/',
-//   tilemap: 'terrain-v7.tsx'
-// })
-
-/** What yp ? */
-let isUser = (req: express$Request, res, next) => {
-  if (world.players.filter(e => e.ip == req.connection.remoteAddress)[0])
+let is_user = (req: express$Request, res, next) => {
+  if (users.find(e => e.ip == req.ip)) {
+    req.headers.user = users.find(e => e.ip == req.ip)
     next()
-  else {
-    res.status(400).end()
   }
 }
 
+app.use(is_user)
+
 let debug = (req: express$Request, res, next) => {
-  console.log(`${req.url}: ${req.headers.user ? req.headers.user.name : "no user defined"}`)
+  console.log(`${req.protocol}://${req.hostname}${req.url}: ${req.headers.user ? req.headers.user.name : "no user defined"}`)
   next()
 }
 
 app.use(debug)
-
-/**
- * @api {get} / root
- * @apiName Root
- * @apiGroup All
- */
 app.use('/', express.static('client'))
-app.use('/api', express.static('docs/apidoc'))
-app.use('/doc', express.static('docs/reference'))
-// app.use('/wiki', jingo_app)
+
+let items = {
+  cheval : {
+    abs_value: 300,
+    tier: 1
+  },
+  attelage: {
+    abs_value: 1500,
+    tier: 1
+  }
+}
+
+let world = {
+  spawn: {
+    type: 'city',
+    name: 'Spawn City',
+    states: {
+      explore: {
+        'gold': [ [1, 100], [1, 9], 'You managed to beg for a few pieces' ],
+        // 'people': [ [1, 1000], [1, 1], 'Someone liked your caravan idea and decided to join you !' ]
+      },
+    },
+    shop: {}
+  }
+}
 
 require('./get').default(app)
 
-/**
- * @api {get} /tile/:name Access a particular tile
- * @apiName tile
- * @apiGroup User
- */
-app.get('/tile/:name', isUser, (req: express$Request, res: express$Response) => {
-  // console.log(world.tiles, req.params.name)
-  res.end( JSON.stringify(world.tiles[req.params.name]) )
+app.get('/explore', (req: express$Request, res, next) => {
+  let {user} = req.headers
+
+  if (user.state == 'explore') {
+    user.state = 'idle'
+    user.ws.send(JSON.stringify({ cmd: 'me' }))
+    return res.end()
+  }
+
+  user.state = 'explore'
+  user.ws.send(JSON.stringify({
+    cmd: 'me'
+  }))
+  res.end()
 })
 
-app.listen(4242, 'localhost', () => end('init'));
+app.get('/states', (req: express$Request, res, next) => {
+  res.end( JSON.stringify(R.keys(world[req.headers.user.location].states)) )
+})
+
+app.listen(4242, 'localhost', () => {
+  console.log(`Listening on port 4242 @ ${new Date().toTimeString()}`)
+
+  setInterval(function () {
+    users.forEach(u => {
+      if (u.state != 'idle') {
+        let location = world[u.location]
+        let a = Math.round(Math.random() * (Object.keys(location.states).length - 1))
+        let [ name, [ [ chance, total ], [min, max], text ]] = Object.entries(location.states[u.state])[a]
+        let _ = Math.floor(Math.random() * total) + 1
+        let res = _ <= chance
+        if (res) {
+          let _ = Math.floor(Math.random() * max) + min
+          u[name] += _
+          u.events.push(text + ` [+ ${_}] { ${new Date().toTimeString()} } `)
+          u.ws.send(JSON.stringify({ cmd: 'me' }))
+        }
+      }
+    })
+  }, 1000)
+
+  setInterval(function ping() {
+    users.forEach( function each(user) {
+      if (!user.ws)
+        return
+
+      if (user.ws && user.connected === false)
+        return user.ws.terminate();
+
+      user.connected = false;
+      user.ws.ping(function(){});
+    });
+  }, 30000);
+});

@@ -1,1 +1,0 @@
-Math.floor( (openSimplex.noise2D( Math.floor(x / 20), Math.floor(y / 20) ) + 0.8) * depth / 2)

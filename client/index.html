@@ -7,189 +7,75 @@
   <title>client</title>
   <meta name="description" content="client description">
 
-  <style>
-  body {
-    font-family: Monospace;
-    background-color: #000;
-    color: #fff;
-    margin: 0px;
-    overflow: hidden;
-  }
-  #blocker {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-  }
-  #instructions {
-    width: 100%;
-    height: 100%;
-    display: -webkit-box;
-    display: -moz-box;
-    display: box;
-    -webkit-box-orient: horizontal;
-    -moz-box-orient: horizontal;
-    box-orient: horizontal;
-    -webkit-box-pack: center;
-    -moz-box-pack: center;
-    box-pack: center;
-    -webkit-box-align: center;
-    -moz-box-align: center;
-    box-align: center;
-    color: #ffffff;
-    text-align: center;
-    cursor: pointer;
-  }
-  </style>
-
-  <script type="text/javascript" src="https://threejs.org/build/three.js"></script>
-  <script type="text/javascript" src="FirstPersonControls.js"></script>
-  <script type="text/javascript" src="OrbitControls.js"></script>
-  <script type="text/javascript" src="PointerLockControls.js"></script>
-  <script type="text/javascript" src="keys.js"></script>
-  <script type="text/javascript" src="util.js"></script>
-  <script type="text/javascript" src="dat.gui.min.js"></script>
-</head>
-<body>
-  <script>
-  var run = true
-  var objects = []
-
-  var controlsEnabled = false;
-  var canJump = false;
-  var prevTime = performance.now();
-  var velocity = new THREE.Vector3(0, 0, 0);
-  var direction = new THREE.Vector3(0, 0, 0);
-  var camera, scene, renderer, stats;
-  var Cubecount = 0
-
-  function render() {
-    var time = performance.now() * 0.001;
-    renderer.render(scene, camera)
-  }
-
-  scene = new THREE.Scene();
-  scene.add( new THREE.AmbientLight( 0x6f6f6f ) );
-
-  camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
-  var controls = new THREE.PointerLockControls( camera );
-  scene.add( controls.getObject() )
-  controls.getObject().position.set(0, 0, 0)
-
-  var pointerlockchange = function ( event ) {
-      console.log('pointerlockchange')
-      controlsEnabled = !controlsEnabled;
-      controls.enabled = !controls.enabled;
-  };
-  document.addEventListener( 'pointerlockchange', pointerlockchange, false );
-
-  renderer = new THREE.WebGLRenderer( { antialias: true } );
-
-  renderer.setPixelRatio( window.devicePixelRatio );
-  renderer.setSize( window.innerWidth, window.innerHeight );
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.BasicShadowMap;
-  document.body.appendChild( renderer.domElement );
-
-  var raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, -1, 0 ), 0, 2 );
-
-	document.addEventListener( 'keydown', onKeyDown, false );
-	document.addEventListener( 'keyup', onKeyUp, false );
-	document.addEventListener( 'keypress', onKeyPress, false );
-  //
-  var gui = new dat.GUI({name: 'My GUI'});
-  gui.add(window, 'run')
-  gui.add(window, 'Cubecount').listen()
-  //
-
-  gui.add(controls.getObject().position, 'x').listen()
-  gui.add(controls.getObject().position, 'y').listen()
-  gui.add(controls.getObject().position, 'z').listen()
-  //
-  var clock = new THREE.Clock()
-  function animate() {
-    // var delta = clock.getDelta()
-
-    if ( controlsEnabled === true ) {
-      raycaster.ray.origin.copy( controls.getObject().position );
-      // raycaster.ray.origin.y -= 2;
-      var intersections = raycaster.intersectObjects( objects );
-      var onObject = intersections.length > 0;
-      var time = performance.now();
-      // var delta = ( time - prevTime ) / 3000;
-      var delta = 0.01;
-      // console.log(delta)
-      velocity.x -= velocity.x * 10 * delta;
-      velocity.y -= velocity.y * 10 * delta; // 100.0 = mass
-      velocity.z -= velocity.z * 10 * delta;
-
-      direction.x = Number( keys.left ) - Number( keys.right );
-      direction.y = Number( keys.down ) - Number( keys.up );
-      direction.z = Number( keys.forward ) - Number( keys.backward );
-      direction.normalize(); // this ensures consistent movements in all directions
-
-      if ( keys.left || keys.right )
-        velocity.x -= direction.x * 400.0 * delta;
-      if ( keys.up || keys.down )
-        velocity.y -= direction.y * 400.0 * delta;
-      if ( keys.forward || keys.backward )
-        velocity.z -= direction.z * 400.0 * delta;
-
-      controls.getObject().translateX( velocity.x * delta );
-      controls.getObject().translateY( velocity.y * delta );
-      controls.getObject().translateZ( velocity.z * delta );
-
-      prevTime = time;
+  <style media="screen">
+    body {
+      background-color: #303030;
+      filter: invert(100%);
     }
-    // else {
-    //   // document.body.requestPointerLock()
-    // }
 
-    render();
-    requestAnimationFrame( animate );
+    .button {
+      border: 1px solid black;
+      display: inline-flex;
+      padding: 12px;
+    }
+  </style>
+</head>
+  <section id=states></section>
+  <section id=actions>
+    <div id=shop class=button onclick="fetchShop()">shop</div>
+  </section>
+  <hr />
+  <div id=me></div>
+  <script>
+    let fetchShop = function(e) {
+      console.log(e)
+    }
 
-  }
+    fetch('/me').then(e => e.text().then(_ => {
+      let me = JSON.parse(_)
+      document.querySelector('#me').innerText = _
 
-  var geometry = new THREE.BoxBufferGeometry( 1, 1, 1 );
-  var materialGray = new THREE.MeshLambertMaterial( {
-    color: 0xa0adaf,
-    wireframe: true
-  } );
-  var materialGreen = new THREE.MeshLambertMaterial( {
-    color: 0xa0ddaf,
-    wireframe: false
-  } );
-  var materialGreenMore = new THREE.MeshLambertMaterial( {
-    color: 0x60bd6f,
-    wireframe: false
-  } );
-  var materialBlue = new THREE.MeshLambertMaterial( {
-    color: 0x4d4fd0,
-    wireframe: false
-  } );
+      // Create WebSocket connection.
+      let socket = new WebSocket('ws://multivers.adebray.ovh/' + me.token + '.ws');
 
-  fetchMultivers('/world').then( res => res.json().then( e => {
-    e.add.forEach(_ => {
-      var mesh = new THREE.Mesh( geometry, materialGray )
+      // Connection opened
+      socket.addEventListener('open', function (event) {
+          socket.send('Hello Server!');
 
-      Cubecount += 1
+          fetch('/states').then(e => e.json().then(_ => {
+            _.forEach(s => {
+              let d = document.createElement('div')
+              d.innerText = me.state == s ? `stop ${s}` : s
+              d.id = s
+              d.className += 'button'
+              d.addEventListener('click', () => {
+                fetch(s).then(() => {
+                  let _ = d.innerText.match(/stop (.*)/)
+                  if (_)
+                    d.innerText = _[1]
+                }).catch(console.error)
+              })
+              document.querySelector('#states').appendChild(d)
+            })
+          }))
+      });
 
-      mesh.position.x = _.x - e.position[0];
-      mesh.position.y = _.y;
-      mesh.position.z = _.z - e.position[1];
-      mesh.receiveShadow = true;
-
-      // mesh.castShadow = true;
-      // mesh.receiveShadow = true;
-
-      scene.add( mesh );
-      objects.push( mesh )
-    })
-
-    animate()
-  }))
+      // Listen for messages
+      socket.addEventListener('message', function (event) {
+          console.log('Message from server ', event.data);
+          let _ = JSON.parse(event.data)
+          if (_.cmd == 'me')
+            fetch('/me').then(e => e.text().then(_ => {
+              let me = JSON.parse(_)
+              document.querySelector('#me').innerText = _
+              if (me.state != 'idle') {
+                console.log(me.state)
+                console.log(document.querySelector(`#${me.state}`))
+                document.querySelector(`#${me.state}`).innerText = `stop ${me.state}`
+              }
+            }))
+      });
+    }))
 
   </script>
-</body>
-
 </html>

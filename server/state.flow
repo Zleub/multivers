@@ -1,0 +1,19 @@
+// export const states = (world, user) => {
+//   return Object.entries(world[user.location].states).reduce([k,v] => {
+//     p[k] = function (user) => {
+//
+//     }
+//   }, {})
+
+  // explore: (user) => {
+  //   if ( Math.floor(Math.random() * Math.floor(100)) == 0 ) {
+  //     let _ = Math.floor(Math.random() * Math.floor(10)) + 1
+  //     user.copper += _
+  //     user.events.push(`You managed to beg for a few pieces [+ ${_} copper] { ${new Date().toTimeString()} }`)
+  //     user.ws.send(JSON.stringify({ cmd: 'me' }))
+  //   }
+  //   // else if ( Math.floor(Math.random() * Math.floor(100)) == 0 ) {
+  //   //
+  //   // }
+  // }
+// }
