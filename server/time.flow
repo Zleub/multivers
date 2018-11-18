@@ -1,0 +1,33 @@
+/* @flow */
+
+export const scale = 2.5 / 60 // the ratio of a second for a tick @ 1min = 2.5sec
+
+export const time_convert = (time) => {
+	return {
+		seconds: time % 60,
+		minutes: Math.floor(time / 60) % 60,
+		hours: Math.floor(time / 3600) % 24,
+		days: Math.floor(time / 86400) % 7,
+		weeks: Math.floor(time / 604800)
+	}
+}
+
+export let current_time = 0
+export const time = function ( cb ) {
+	current_time += 1
+
+	let old = time_convert(current_time - 1)
+	let current = time_convert(current_time)
+
+	if (cb.seconds)
+		cb.seconds.forEach( e => e() )
+	if (cb.minutes && old.minutes != current.minutes)
+		cb.minutes.forEach( e => e() )
+	if (cb.hours && old.hours != current.hours)
+		cb.hours.forEach( e => e() )
+	if (cb.days && old.days != current.days)
+		cb.days.forEach( e => e() )
+	if (cb.weeks && old.weeks != current.weeks)
+		cb.weeks.forEach( e => e() )
+
+}

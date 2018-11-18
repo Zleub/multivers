@@ -31,5 +31,5 @@ export default function (req: express$Request, res, next) {
     }
   }, 10000);
 
-  res.end(user_to_string(user))
+  res.end( user_to_string(user) )
 }

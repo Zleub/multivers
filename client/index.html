@@ -10,22 +10,56 @@
   <style media="screen">
     body {
       background-color: #303030;
-      filter: invert(100%);
+      color: #f2f2f2;
+      /* filter: invert(100%); */
     }
 
     .button {
-      border: 1px solid black;
+      border: 1px solid #f2f2f2;
       display: inline-flex;
       padding: 12px;
+      margin: 4px;
+    }
+
+    .top {
+      vertical-align: top;
+      display: inline-block;
+    }
+
+    #map {
+      /* background-color: #303030; */
+      display: inline-flex;
+    }
+
+    .small {
+      font: 6px sans-serif;
+      fill: #b2b2b2;
+    }
+
+    canvas {
+      border: 1px solid white;
+      position: absolute;
+      z-index: -1;
+      top: 7px;
+      left: 7px;
+    }
+
+    svg {
+      background-color: #000000af;
     }
   </style>
 </head>
-  <section id=states></section>
-  <section id=actions>
-    <div id=shop class=button onclick="fetchShop()">shop</div>
-  </section>
+<body>
+  <svg id=map width="500" height="500" xmlns="http://www.w3.org/2000/svg"></svg>
+  <canvas id=noise width=500 height=500></canvas>
+  <div class=top>
+    <section id=states></section>
+    <section id=actions></section>
+  </div>
   <hr />
-  <div id=me></div>
+  <pre id=location class=top></pre>
+  <pre id=me class=top></pre>
+  <pre id=shop></pre>
   <script>
     let fetchShop = function(e) {
       console.log(e)
@@ -42,6 +76,23 @@
       socket.addEventListener('open', function (event) {
           socket.send('Hello Server!');
 
+          fetch('/location').then(e => e.text().then(e => document.querySelector('#location').innerText = e))
+          fetch('/map').then(e => e.text().then(e => {
+            document.querySelector('svg').innerHTML = e
+          }))
+
+          fetch('/noise').then(e => e.json().then(e => {
+            const [width, height] = [500, 500];
+            const canvas = document.querySelector('#noise');
+            const ctx = canvas.getContext('2d');
+            // const imageData = ctx.createImageData(width, height);
+            imageData = new ImageData(Uint8ClampedArray.from(e), width, height)
+
+            // imageData.data = e
+            ctx.putImageData(imageData, 0, 0)
+          }))
+
+
           fetch('/states').then(e => e.json().then(_ => {
             _.forEach(s => {
               let d = document.createElement('div')
@@ -50,32 +101,46 @@
               d.className += 'button'
               d.addEventListener('click', () => {
                 fetch(s).then(() => {
-                  let _ = d.innerText.match(/stop (.*)/)
-                  if (_)
-                    d.innerText = _[1]
+                  d.innerText = me.state == s ? `stop ${s}` : s
                 }).catch(console.error)
               })
               document.querySelector('#states').appendChild(d)
             })
           }))
+
+          fetch('/actions').then(e => e.json().then(_ => {
+            _.forEach(s => {
+              let d = document.createElement('div')
+              d.innerText = s
+              d.id = s
+              d.className += 'button'
+              d.addEventListener('click', () => {
+                fetch(s).then(e => e.text().then(e => {
+                  document.querySelector('pre#shop').innerText = e
+                })).catch(console.error)
+              })
+              document.querySelector('#actions').appendChild(d)
+            })
+          }))
+
       });
 
       // Listen for messages
       socket.addEventListener('message', function (event) {
           console.log('Message from server ', event.data);
           let _ = JSON.parse(event.data)
-          if (_.cmd == 'me')
-            fetch('/me').then(e => e.text().then(_ => {
-              let me = JSON.parse(_)
-              document.querySelector('#me').innerText = _
-              if (me.state != 'idle') {
-                console.log(me.state)
-                console.log(document.querySelector(`#${me.state}`))
-                document.querySelector(`#${me.state}`).innerText = `stop ${me.state}`
-              }
-            }))
+          if (_.cmd == 'me') {
+            document.querySelector('#me').innerText = _.payload
+            me = JSON.parse(_.payload)
+            if (me.state != 'idle') {
+              console.log(me.state)
+              console.log(document.querySelector(`#${me.state}`))
+              document.querySelector(`#${me.state}`).innerText = `stop ${me.state}`
+            }
+          }
       });
     }))
 
   </script>
+  </body>
 </html>

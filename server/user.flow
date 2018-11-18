@@ -1,9 +1,10 @@
 /* @flow */
 
 import R from 'ramda'
+import { d4 } from './dice'
 
-export const makeUser = (name, ip) => {
-  let _ = {
+export const User = (name, ip) => {
+  return {
     name,
     ip,
 
@@ -17,17 +18,49 @@ export const makeUser = (name, ip) => {
     events: [],
 
     connected: false,
-    ws: null
-  }
+    ws: null,
 
-  // _.peopleList.push(_)
-  return _
+    // attributes: {
+    //   agility: d4,
+    //   smarts: d4,
+    //   spirit: d4,
+    //   strength: d4,
+    //   vigor: d4
+    // },
+
+    // skills: {
+    //
+    // }
+
+    inventory: []
+  }
 }
 
-export let users = [ makeUser('localhost', '127.0.0.1') ]
+export let users = [
+  User('localhost', '127.0.0.1'),
+  // User('adebray', '62.210.32.47'),
+  // User('adebray', '91.161.236.92'),
+  // User('adebray', '62.210.32.103'),
+]
 
 export const user_to_string = user => JSON.stringify(R.omit([
   'connected',
   'ip',
   'ws',
-], user), "  ", 2)
+], user), (key, val) => val === d4 ? "d4" : val, 2)
+
+export const update_user = () => users.forEach(u => {
+  if (u.state != 'idle') {
+    let location = world[u.location]
+    let a = Math.round(Math.random() * (Object.keys(location.states).length - 1))
+    let [ name, [ [ chance, total ], [min, max], text ] ] = Object.entries(location.states[u.state])[a]
+    let _ = Math.floor(Math.random() * total) + 1
+    let res = _ <= chance
+    if (res) {
+      let _ = Math.floor(Math.random() * max) + min
+      u[name] += _
+      u.events.push(text + ` [+ ${_}] { ${new Date().toTimeString()} } `)
+      u.ws.send(JSON.stringify({ cmd: 'me', payload: user_to_string(u) }))
+    }
+  }
+})

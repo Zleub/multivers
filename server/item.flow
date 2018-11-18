@@ -1,0 +1,63 @@
+/* @flow */
+
+import { inspect } from 'util'
+
+export let items : {|
+  test: {|
+    name: number,
+    type: string,
+    to: Array<string>,
+    from: Array<string>
+  |}
+|} = {}
+
+export const Item = (name : string, value: Array<string>) => {
+  let match_expr = (e: string) => e.match(/([A-z]*)\s*x?(\d*)/)
+  let is_basic = () => !(value instanceof Array)
+  let [_, _name, _quantity] = match_expr(name)
+  let to_div_string = _quantity ? e => `${e} /${_quantity}` : e => `${e}`
+
+  if (!is_basic()) {
+    value.forEach(e => {
+      let [_, _e, quantity] = match_expr(e)
+      items[_e].to.push(name)
+    })
+  }
+
+  if (items[_name]) {
+    items[_name].from.push(value.map(to_div_string))
+    return
+  }
+
+  items[_name] = {
+    name: _name,
+    type: is_basic() ? "basic" : "advanced",
+    to: [],
+    from: is_basic() ? [ value ] : [ value.map(to_div_string) ],
+    tier: -1,
+
+    [inspect.custom]: () => `[ ${items[_name].from} ] -> ${_name} -> [ ${items[_name].to} ]`
+  }
+}
+
+Item('wood', 50)
+Item('log x4', ['wood'])
+Item('planche x4', ['log'])
+Item('planche x32', ['wood'])
+
+Item('iron_ore', 100)
+Item('iron_bar', ['iron_ore x8'])
+Item('nail x64', ['iron_bar'])
+
+Item('cotton_seed', 5)
+Item('cotton_plant', 30)
+Item('cotton x10', ['cotton_plant'])
+Item('tissus', ['cotton x10'])
+Item('bache', ['tissus x50'])
+
+Item('cheval', 300)
+
+Item('chariot', ['planche x200', 'nail x100', 'bache'])
+Item('attelage', ['cheval x4', 'chariot'])
+
+console.log(Object.values(items))

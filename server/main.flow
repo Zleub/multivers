@@ -8,96 +8,103 @@ import R from 'ramda'
 import express from 'express'
 import { app, ws_app } from './express'
 
-import { users, user_to_string } from './user'
+import { users, user_to_string, update_user } from './user'
+import { items, Item } from './item'
+import { width, height, world, update_world, update_world_daily, delaunay, voronoi, sites, euclidean_distance, twisted_euclidean_distance2, sort_distance, poly, paths, data } from './location'
+import { twisted_euclidean_distance } from './util'
 // import { states } from './state'
+import { time, scale } from './time'
 
 if (process.argv.find(e => e == '--log' || e == '-l'))
   writeFileSync("multivers.log", "")
 
 let is_user = (req: express$Request, res, next) => {
   if (users.find(e => e.ip == req.ip)) {
-    req.headers.user = users.find(e => e.ip == req.ip)
+    req.headers.user = users.find(e => e.ip == req.headers.ip)
     next()
+  } else {
+    res.end(400)
   }
 }
 
 app.use(is_user)
 
 let debug = (req: express$Request, res, next) => {
-  console.log(`${req.protocol}://${req.hostname}${req.url}: ${req.headers.user ? req.headers.user.name : "no user defined"}`)
+  console.log(`${req.protocol}://${req.hostname}${req.url}: ${req.headers.user ? req.headers.user.name : `no user defined for ${req.headers.ip}`}`)
   next()
 }
 
 app.use(debug)
 app.use('/', express.static('client'))
-
-let items = {
-  cheval : {
-    abs_value: 300,
-    tier: 1
-  },
-  attelage: {
-    abs_value: 1500,
-    tier: 1
-  }
-}
-
-let world = {
-  spawn: {
-    type: 'city',
-    name: 'Spawn City',
-    states: {
-      explore: {
-        'gold': [ [1, 100], [1, 9], 'You managed to beg for a few pieces' ],
-        // 'people': [ [1, 1000], [1, 1], 'Someone liked your caravan idea and decided to join you !' ]
-      },
-    },
-    shop: {}
-  }
-}
+app.use('/doc', express.static('docs/reference'))
 
 require('./get').default(app)
 
 app.get('/explore', (req: express$Request, res, next) => {
   let {user} = req.headers
 
-  if (user.state == 'explore') {
-    user.state = 'idle'
-    user.ws.send(JSON.stringify({ cmd: 'me' }))
-    return res.end()
-  }
-
-  user.state = 'explore'
-  user.ws.send(JSON.stringify({
-    cmd: 'me'
-  }))
-  res.end()
+  user.state = user.state == 'explore' ? 'idle' : 'explore'
+  user.ws.send(JSON.stringify({ cmd: 'me', payload: user_to_string(user) }))
+  return res.end()
 })
+
+let pretty = e => JSON.stringify(e, (key, val) => val === Infinity ? 'Infinity' : val, 2)
 
 app.get('/states', (req: express$Request, res, next) => {
   res.end( JSON.stringify(R.keys(world[req.headers.user.location].states)) )
 })
 
+app.get('/actions', (req: express$Request, res, next) => {
+  res.end( JSON.stringify(R.keys(world[req.headers.user.location].actions)) )
+})
+
+app.get('/shop', (req: express$Request, res, next) => {
+  res.end( pretty( Object.values(world[req.headers.user.location].actions.shop).filter(e => e.from.find(e => typeof e == 'number')).map(R.pick(['name', 'from'])) ) )
+})
+
+app.get('/location', (req: express$Request, res, next) => {
+  res.end( pretty(R.omit(['actions', 'states'], world[req.headers.user.location])) )
+})
+
+app.get('/noise', (req: express$Request, res, next) => {
+  res.end( JSON.stringify(data) )
+})
+
+app.get('/map', (req: express$Request, res, next) => {
+  res.end(
+    poly.map(e => `<polygon points="${e}" fill="none" stroke="white"/>`)
+    // `<path d=${delaunay.render()} fill=none stroke=blue></path>`
+    + Object.entries(world).map(([n, e]) => `<circle cx=${e.x} cy=${e.y} r=4 fill=${req.headers.user.location == n ? "red" : "white"}></circle>`)
+    // + sites.map(([x, y], i, a) => `<circle cx=${x} cy=${y} r=${ (Math.floor(twisted_euclidean_distance(world.district42)({x,y}, world.spawn))) / 200 } fill=none stroke="blue"></circle>`)
+    + paths.map(path => path.map(({x,y}, i, a) => a[i + 1] ? `<line x1="${x}" y1="${y}" x2="${a[i + 1].x}" y2="${a[i + 1].y}" stroke="brown" stroke-width="4px" />` : '')).join()
+    // + path_test.map((e, i, a) => `<polygon points="${voronoi.cellPolygon(delaunay.find(e.x, e.y))}" fill="purple" fill-opacity=0.5></polygon>`).join()
+    // + sites.map(([x, y], i, a) => `<text x=${x} y=${y} class=small>${Math.floor(twisted_euclidean_distance(world.district42)({x,y}, world.spawn)) - 7000}</text>`)
+    // + sites.map(([x, y], i, a) => `<text x=${x} y=${y - 6} class=small>${Math.floor(twisted_euclidean_distance2(world.district42)({x,y}, world.spawn))}</text>`)
+    // + [sites.splice(0).filter(([x,y]) => world.spawn.x != x && world.spawn.y != y).sort(twisted_euclidean_distance(world.spawn))[0]].map(([x, y], i, a) => `<text x=${x} y=${y} class=small>${Math.floor(twisted_euclidean_distance(world.spawn)({x,y}, world.spawn))}</text>`)
+  )
+})
+
 app.listen(4242, 'localhost', () => {
   console.log(`Listening on port 4242 @ ${new Date().toTimeString()}`)
 
+  let lock = false
   setInterval(function () {
-    users.forEach(u => {
-      if (u.state != 'idle') {
-        let location = world[u.location]
-        let a = Math.round(Math.random() * (Object.keys(location.states).length - 1))
-        let [ name, [ [ chance, total ], [min, max], text ]] = Object.entries(location.states[u.state])[a]
-        let _ = Math.floor(Math.random() * total) + 1
-        let res = _ <= chance
-        if (res) {
-          let _ = Math.floor(Math.random() * max) + min
-          u[name] += _
-          u.events.push(text + ` [+ ${_}] { ${new Date().toTimeString()} } `)
-          u.ws.send(JSON.stringify({ cmd: 'me' }))
-        }
-      }
+    if (lock == true)
+      return console.error('late lock !!')
+
+    lock = true
+
+    time({
+      seconds: [ update_user ],
+      minutes: [ update_world ],
+      hours:[],
+      days: [ /* update_world_daily */ ],
+      weeks: [],
+
     })
-  }, 1000)
+
+    lock = false
+  }, scale * 1000)
 
   setInterval(function ping() {
     users.forEach( function each(user) {
@@ -110,5 +117,5 @@ app.listen(4242, 'localhost', () => {
       user.connected = false;
       user.ws.ping(function(){});
     });
-  }, 30000);
+  }, 20000);
 });

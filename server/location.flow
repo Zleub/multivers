@@ -1,0 +1,197 @@
+/* @flow */
+
+import { current_time, time_convert } from './time'
+import { items } from './item'
+import { users } from './user'
+import { euclidean_distance, twisted_euclidean_distance } from './util'
+
+import {Delaunay} from "d3-delaunay";
+import OpenSimplexNoise from 'open-simplex-noise'
+
+const openSimplex = new OpenSimplexNoise(42)
+
+export const [width, height] = [500, 500]
+export let sites = [
+  [0, 0], [0, height], [width, 0], [width, height]
+]
+// .concat( Object.values(world).map(e => [e.x, e.y]) );
+
+let transform = ([x, y]) => [x / 200, y / 200]
+
+for (var i = 0; i < 1000; i++) {
+  let site = [Math.floor(Math.random() * width), Math.floor(Math.random() * height)]
+  let _ = sites.reduce( (p, [x, y]) => {
+    let _ = euclidean_distance({x: site[0], y: site[1]}, {x, y})
+    return _ < p ? _ : p
+  }, Infinity )
+  if (_ > 10 && openSimplex.noise2D(...transform(site)) > 0)
+    sites.push( site )
+}
+
+export let data = []
+for (let x = 0; x < width; x++) {
+  for (let y = 0; y < height; y++) {
+    const i = (x + y * width) * 4;
+    const value = (openSimplex.noise2D(...transform([x, y])) + 1) * 128;
+
+    if (value > 127) {
+      data[i] = 0;
+      data[i + 1] = 255;
+      data[i + 2] = 0;
+    }
+    else if (value > 120) {
+      data[i] = 255;
+      data[i + 1] = 255;
+      data[i + 2] = 0;
+    }
+    else {
+      data[i] = 0;
+      data[i + 1] = 0;
+      data[i + 2] = 0;
+    }
+
+    data[i + 3] = value;
+  }
+}
+
+// console.log(sites)
+export let delaunay = Delaunay.from(sites);
+export let voronoi = delaunay.voronoi([0, 0, width, height]);
+
+let t = []
+export let poly = [...voronoi.cellPolygons()].filter((e, i) => {
+  let _ = !e.find( ([x,y]) => x == 0 || x == width || y == 0 || y == height )
+  if (!_)
+    t.push({x: sites[i][0], y: sites[i][1], i})
+  return _
+})
+
+let _sites = sites.slice(0).filter(([x,y]) => t.find( ({x: _x, x: _y}) => _x == x && _y == y ) == undefined )
+export let world = {}
+
+for (var i = 0; i < 5; i++) {
+  let a = _sites[Math.floor(Math.random()*_sites.length)]
+  let _ = {
+    x: a[0], y: a[1],
+    type: 'city'
+  }
+  if (i == 0) {
+    _.name = 'Spawn City'
+    world.spawn = _
+  }
+  else if (i == 1) {
+    _.name = 'Discrict42'
+    world.district42 = _
+
+  }
+  else {
+    _.name = i + 'City'
+    world[_.name] = _
+  }
+
+}
+
+// export let world = {
+//   spawn: {
+//     type: 'city',
+//     name: 'Spawn City',
+// 		population: 1000,
+//     x: a[0],
+//     y: a[1],
+//
+//     states: {
+//       // explore: {
+//         // 'gold': [ [1, 100], [1, 9], 'You managed to beg for a few pieces' ],
+//         // 'people': [ [1, 1000], [1, 1], 'Someone liked your caravan idea and decided to join you !' ]
+//         // 'tavern'
+//       // },
+// 			// scavenge: {},
+// 			// steal: {},
+// 			// ransack: {},
+//     },
+//
+//     actions: {
+//       shop: items,
+//       // tavern: ''
+//     },
+//
+//     // knowledges: {
+//       // 'tavern': 'blabla'
+//     // },
+//
+//     ressources: {
+//       wood: 1000000
+//     }
+//   },
+//   district42: {
+//     type: 'district',
+//     name: 'Discrict42',
+// 		population: 242,
+//     x: b[0],
+//     y: b[1],
+//
+//     states: {
+// 			scavenge: {},
+//     },
+//
+//     ressources: {
+//       wood: 0
+//     }
+//   }
+// }
+
+let cities = Object.values(world).map(e => e.type == 'city')
+
+export let update_world = () => {
+  console.log('update_world')
+  users.forEach(e => {
+    if (e.ws && e.connected) {
+      e.ws.send(JSON.stringify({ cmd: 'time', payload: time_convert(current_time) }))
+    }
+  })
+  // Object.values(world).forEach(e => {
+  //   // e.food -= e
+  // })
+}
+
+export let update_world_daily = () => {
+  Object.values(world).forEach(e => {
+    // e.food -= e
+  })
+}
+
+export let paths = Object.values(world).map(e => {
+  let _ = [world.spawn.x, world.spawn.y]
+  let path_test = [
+    { x: _[0],y: _[1], d:twisted_euclidean_distance(e)({x: _[0],y: _[1]}, {x: _[0], y: _[1]}) }
+  ]
+
+  let count = 0
+  while (_[0] != e.x && _[1] != e.y && count < 100) {
+    let woot = [...delaunay.neighbors(delaunay.find(_[0], _[1]))]
+    .filter(i => t.find( ({x, y}) => sites[i][0] == x && sites[i][1] == y) == undefined )
+    .map(i =>
+      ({x: sites[i][0],y: sites[i][1], d:twisted_euclidean_distance(e)({x: sites[i][0],y: sites[i][1]}, {x: _[0], y: _[1]})})
+    ).sort( (a,b) => a.d - b.d )
+
+    // if (woot.length == 0)
+    //   break
+    path_test.push(woot[0])
+    _ = [woot[0].x, woot[0].y]
+    count += 1
+  }
+
+  return path_test
+})
+
+// export let woot = [...delaunay.neighbors(delaunay.find(world.spawn.x, world.spawn.y))].map(i =>
+//   twisted_euclidean_distance(world.district42)({x: sites[i][0],y: sites[i][1]}, world.spawn)
+// )
+
+// sites = sites.filter((e,i) => t.find(e => e == i) == undefined)
+
+// console.log(t)
+// console.log( [...delaunay.neighbors(delaunay.find(world.spawn.x, world.spawn.y))] )
+
+// const aidwj = Delaunay.from(sites);
+// export let voronoi = aidwj.voronoi([0, 0, width, height]);
