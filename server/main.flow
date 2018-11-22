@@ -10,7 +10,8 @@ import { app, ws_app } from './express'
 
 import { users, user_to_string, update_user } from './user'
 import { items, Item } from './item'
-import { width, height, world, update_world, update_world_daily, delaunay, voronoi, sites, euclidean_distance, twisted_euclidean_distance2, sort_distance, poly, paths, data } from './location'
+import { world, update_world, update_world_daily, delaunay, voronoi, sites, euclidean_distance, twisted_euclidean_distance2, sort_distance, poly, paths } from './location'
+import { width, height, data } from './world'
 import { twisted_euclidean_distance } from './util'
 // import { states } from './state'
 import { time, scale } from './time'
@@ -72,11 +73,11 @@ app.get('/noise', (req: express$Request, res, next) => {
 
 app.get('/map', (req: express$Request, res, next) => {
   res.end(
-    poly.map(e => `<polygon points="${e}" fill="none" stroke="white"/>`)
+    // poly.map(e => `<polygon points="${e}" fill="none" stroke="white" stroke-dasharray="2"/>`).join()
     // `<path d=${delaunay.render()} fill=none stroke=blue></path>`
-    + Object.entries(world).map(([n, e]) => `<circle cx=${e.x} cy=${e.y} r=4 fill=${req.headers.user.location == n ? "red" : "white"}></circle>`)
+    // + Object.entries(world).map(([n, e]) => `<circle cx=${e.x} cy=${e.y} r=4 fill=${req.headers.user.location == n ? "red" : "white"}></circle>`)
     // + sites.map(([x, y], i, a) => `<circle cx=${x} cy=${y} r=${ (Math.floor(twisted_euclidean_distance(world.district42)({x,y}, world.spawn))) / 200 } fill=none stroke="blue"></circle>`)
-    + paths.map(path => path.map(({x,y}, i, a) => a[i + 1] ? `<line x1="${x}" y1="${y}" x2="${a[i + 1].x}" y2="${a[i + 1].y}" stroke="brown" stroke-width="4px" />` : '')).join()
+    // + paths.map(path => path.map(({x,y}, i, a) => a[i + 1] ? `<line x1="${x}" y1="${y}" x2="${a[i + 1].x}" y2="${a[i + 1].y}" stroke="brown" stroke-width="4px" />` : '')).join()
     // + path_test.map((e, i, a) => `<polygon points="${voronoi.cellPolygon(delaunay.find(e.x, e.y))}" fill="purple" fill-opacity=0.5></polygon>`).join()
     // + sites.map(([x, y], i, a) => `<text x=${x} y=${y} class=small>${Math.floor(twisted_euclidean_distance(world.district42)({x,y}, world.spawn)) - 7000}</text>`)
     // + sites.map(([x, y], i, a) => `<text x=${x} y=${y - 6} class=small>${Math.floor(twisted_euclidean_distance2(world.district42)({x,y}, world.spawn))}</text>`)

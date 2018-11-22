@@ -1,0 +1,96 @@
+/* @flow */
+
+import OpenSimplexNoise from 'open-simplex-noise'
+
+import {rand, euclidean_distance} from './util'
+
+const seed = 1542841546813 // 42
+
+console.log(`seed ${seed}`)
+const openSimplex = new OpenSimplexNoise(seed)
+const openSimplexTree = new OpenSimplexNoise(seed)
+const noise_scale = ({x, y}) => [x / 200, y / 200]
+const noise2D = p => openSimplex.noise2D(...noise_scale(p))
+
+const Site = (x, y) => ({x, y})
+
+export let [width, height] = [500, 500]
+export let sites = [
+  Site(0, 0), Site(0, height), Site(width, 0), Site(width, height)
+]
+
+let getNearestSite = site => sites.reduce( (p, s) => {
+  let _ = euclidean_distance(site, s)
+  return _ < p ? _ : p
+}, Infinity )
+
+for (var i = 0; i < 1000; i++) {
+  let site = Site( rand(width), rand(height) )
+  let distance = getNearestSite(site)
+
+  if (distance > 10 && noise2D(site) > 0 && noise2D(site) < 0.5)
+    sites.push( site )
+}
+
+export let data = []
+const colors = [
+  { value: 210, r: 255, g: 255, b: 255 },
+  { value: 200, r: 255, g:  69, b:  69 },
+  { value: 127, r: 140, g: 255, b: 120 },
+  { value: 120, r: 255, g: 255, b:   0 },
+  { value:   0, r:   0, g:   0, b: 255 }
+]
+
+let isTree = p => {
+  const value = (noise2D(p) + 1) * 128
+  const valueTree = (openSimplexTree.noise2D( ...[p.x / 20, p.y / 20] ) + 1) * 128
+
+  if (127 < value && value < 200 && 165 < valueTree)
+      return p.x % (rand(5) + 2) == 0 && p.y % (rand(5) + 2) == 0
+}
+
+let isRiver = p => {
+  const i = (p.x + p.y * width) * 4
+
+  data[i] = 255;
+  data[i + 1] = 255;
+  data[i + 2] = 255;
+  data[i + 3] = 255;
+
+  console.log([
+    [(noise2D({x: p.x - 1, y: p.y - 1}) + 1) * 128, (noise2D({x: p.x, y: p.y - 1}) + 1) * 128, (noise2D({x: p.x + 1, y: p.y - 1}) + 1) * 128],
+    [(noise2D({x: p.x - 1, y: p.y}) + 1) * 128, (noise2D({x: p.x, y: p.y}) + 1) * 128, (noise2D({x: p.x + 1, y: p.y}) + 1) * 128],
+    [(noise2D({x: p.x - 1, y: p.y + 1}) + 1) * 128, (noise2D({x: p.x, y: p.y + 1}) + 1) * 128, (noise2D({x: p.x + 1, y: p.y + 1}) + 1) * 128]
+  ])
+}
+
+for (let x = 0; x < width; x++) {
+  for (let y = 0; y < height; y++) {
+    const i = (x + y * width) * 4;
+    const value = (noise2D({x, y}) + 1) * 128;
+
+    let c = colors.find(c => value > c.value)
+
+    data[i] = c.r;
+    data[i + 1] = c.g;
+    data[i + 2] = c.b;
+
+    if ( isTree({x, y}) ) {
+      data[i] = 0;
+      data[i + 1] = 50;
+      data[i + 2] = 0;
+      data[i + 3] = 255;
+    }
+
+    data[i + 3] = value / 2 + 128;
+
+    let prev = (noise2D({x: x - 1, y}) + 1) * 128
+    if ( prev > value && value > 127)
+    {
+      data[i + 3] += (value - prev) * 128;
+    }
+
+  }
+}
+
+isRiver(250, 350)
