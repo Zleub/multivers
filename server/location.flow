@@ -2,9 +2,10 @@
 
 import { current_time, time_convert } from './time'
 import { items } from './item'
-import { users } from './user'
+// import { users } from './user'
 import { euclidean_distance, twisted_euclidean_distance, rand } from './util'
-import { width, height, sites } from './world'
+import { sites } from './site'
+import { width, height } from './world'
 
 import {Delaunay} from "d3-delaunay";
 
@@ -33,16 +34,19 @@ const predefs = [
     ressources: {
       wood: 1000000
     }
+  },
+  {
+    id: 'district42'
   }
 ]
 
 export let world = {}
 
 for (var i = 0; i < 5; i++) {
-  let a = _sites[rand(_sites.length)]
+  let {x, y} = _sites[rand(_sites.length)]
 
   let _ = {
-    x: a.x, y: a.y,
+    x, y,
     type: 'city'
   }
 
@@ -55,37 +59,18 @@ for (var i = 0; i < 5; i++) {
   }
 }
 
-let cities = Object.values(world).map(e => e.type == 'city')
-
-export let update_world = () => {
-  console.log('update_world')
-  users.forEach(e => {
-    if (e.ws && e.connected) {
-      e.ws.send(JSON.stringify({ cmd: 'time', payload: time_convert(current_time) }))
-    }
-  })
-  // Object.values(world).forEach(e => {
-  //   // e.food -= e
-  // })
-}
-
-export let update_world_daily = () => {
-  Object.values(world).forEach(e => {
-    // e.food -= e
-  })
-}
-
 function Path(from, to) {
   let twisted_distance = twisted_euclidean_distance(to)
   let path = [
     { x: from.x, y: from.y, d: twisted_distance(from, from) }
   ]
 
-  while (from.x != to.x && from.y != to.y) {
+  while (from.x != to.x || from.y != to.y) {
       let woot = [...delaunay.neighbors(delaunay.find(from.x, from.y))]
       .map(i =>
-        ({x: sites[i].x, y: sites[i].y, d: twisted_distance({x: sites[i].x ,y: sites[i].y}, from)})
+        ({x: sites[i].x, y: sites[i].y, d: twisted_distance({x: sites[i].x, y: sites[i].y}, from)})
       )
+      .filter( ({x,y}) => t.find( ({x: _x, y: _y}) => _x == x && _y == y ) == undefined )
       .sort( (a,b) => a.d - b.d )
 
       if (woot.length == 0) {
@@ -96,7 +81,7 @@ function Path(from, to) {
       from = woot[0]
   }
 
-  return path;
+  return path
 }
 
 export let paths = Object.values(world).filter(e => e !== world.spawn).map(e => Path(world.spawn, e))

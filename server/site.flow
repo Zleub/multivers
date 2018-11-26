@@ -1,0 +1,23 @@
+/* @flow */
+
+import { euclidean_distance, rand, noise2D } from './util'
+import { width, height } from './world'
+
+export const Site = (x, y) => ({x, y})
+export let sites = [
+  Site(0, 0), Site(0, height), Site(width, 0), Site(width, height)
+]
+
+export const getNearestSite = site => sites.reduce( (p, s) => {
+  let _ = euclidean_distance(site, s)
+  return _ < p ? _ : p
+}, Infinity )
+
+
+for (var i = 0; i < 1000; i++) {
+  let site = Site( rand(width), rand(height) )
+  let distance = getNearestSite(site)
+
+  if (distance > 10 && noise2D(site) > 0 && noise2D(site) < 0.5)
+    sites.push( site )
+}

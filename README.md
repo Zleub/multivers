@@ -2,12 +2,6 @@
 
 multivers.adebray.io
 
-You need polymer-cli for now : `npm install polymer-cli`
+`yarn install && yarn watch`
 
-`npm install`
-
-`cd client ; npm install`
-
-`npm run start`
-
-`npm run extra` for api documentation and reference generation
+Proposer plusieurs maps avant le debut d'une partie pour choisir

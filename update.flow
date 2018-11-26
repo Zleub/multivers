@@ -1,0 +1,35 @@
+export let world = () => {
+  // console.log('update_world')
+  // users.forEach(e => {
+  //   if (e.ws && e.connected) {
+  //     e.ws.send(JSON.stringify({ cmd: 'time', payload: time_convert(current_time) }))
+  //   }
+  // })
+  // Object.values(world).forEach(e => {
+  //   // e.food -= e
+  // })
+}
+
+export let world_daily = () => {
+  Object.values(world).forEach(e => {
+    // e.food -= e
+  })
+}
+
+export const user = () => users.forEach(u => {
+  u.update.forEach(f => f(u))
+
+  // if (u.state != 'idle') {
+  //   let location = world[u.location]
+  //   let a = Math.round(Math.random() * (Object.keys(location.states).length - 1))
+  //   let [ name, [ [ chance, total ], [min, max], text ] ] = Object.entries(location.states[u.state])[a]
+  //   let _ = Math.floor(Math.random() * total) + 1
+  //   let res = _ <= chance
+  //   if (res) {
+  //     let _ = Math.floor(Math.random() * max) + min
+  //     u[name] += _
+  //     u.events.push(text + ` [+ ${_}] { ${new Date().toTimeString()} } `)
+  //     u.ws.send(JSON.stringify({ cmd: 'me', payload: user_to_string(u) }))
+  //   }
+  // }
+})

@@ -8,6 +8,11 @@
   <meta name="description" content="client description">
 
   <style media="screen">
+    html {
+      --x-offset: 0px;
+      --y-offset: 0px;
+    }
+
     body {
       background-color: #303030;
       color: #f2f2f2;
@@ -16,7 +21,7 @@
 
     .button {
       border: 1px solid #f2f2f2;
-      display: inline-flex;
+      /* display: inline-flex; */
       padding: 12px;
       margin: 4px;
     }
@@ -29,6 +34,13 @@
     #map {
       /* background-color: #303030; */
       display: inline-flex;
+      width: 400px;
+      height: 400px;
+    }
+
+    polygon, circle:not(#me), line {
+      transform:
+        translate(var(--x-offset), var(--y-offset));
     }
 
     .small {
@@ -36,29 +48,36 @@
       fill: #b2b2b2;
     }
 
-    canvas {
+    #noise {
+      image-rendering: pixelated;
+
       border: 1px solid white;
       position: absolute;
       z-index: -1;
       top: 7px;
       left: 7px;
+
+      width: 400px;
+      height: 400px;
     }
 
     svg {
-      background-color: #000000af;
+      /* background-color: #000000af; */
     }
   </style>
 </head>
 <body>
-  <svg id=map width="500" height="500" xmlns="http://www.w3.org/2000/svg"></svg>
-  <canvas id=noise width=500 height=500></canvas>
+  <svg id=map width="200" height="200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"></svg>
+  <canvas id=noise width=200 height=200></canvas>
+  <!-- <svg id=map2 width="200" height="200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"></svg>
+  <canvas id=noise2 style="width: 400px; height: 400px;" width=200 height=200></canvas> -->
   <div class=top>
     <section id=states></section>
     <section id=actions></section>
   </div>
   <hr />
   <pre id=location class=top></pre>
-  <pre id=me class=top></pre>
+  <pre id=user class=top></pre>
   <pre id=shop></pre>
   <script>
     let fetchShop = function(e) {
@@ -66,8 +85,10 @@
     }
 
     fetch('/me').then(e => e.text().then(_ => {
+      // document.documentElement.style.setProperty("--x-offset", 100)
+      let chunks = []
       let me = JSON.parse(_)
-      document.querySelector('#me').innerText = _
+      document.querySelector('#user').innerText = _
 
       // Create WebSocket connection.
       let socket = new WebSocket('ws://multivers.adebray.ovh/' + me.token + '.ws');
@@ -78,18 +99,41 @@
 
           fetch('/location').then(e => e.text().then(e => document.querySelector('#location').innerText = e))
           fetch('/map').then(e => e.text().then(e => {
-            document.querySelector('svg').innerHTML = e
+            document.querySelector('#map').innerHTML = e
+            document.querySelector('#map').addEventListener('click', (e) => {
+              console.log(e)
+              let {offsetX: x, offsetY: y} = e
+              fetch(`/move?x=${Math.floor(x / 2)}&y=${Math.floor(y / 2)}`)
+            })
+
           }))
 
-          fetch('/noise').then(e => e.json().then(e => {
-            const [width, height] = [500, 500];
-            const canvas = document.querySelector('#noise');
-            const ctx = canvas.getContext('2d');
-            // const imageData = ctx.createImageData(width, height);
-            imageData = new ImageData(Uint8ClampedArray.from(e), width, height)
+          // fetch('/data').then(e => e.json().then(e => {
+          //   const [width, height] = [200, 200];
+          //   const canvas = document.querySelector('#noise2');
+          //   const ctx = canvas.getContext('2d');
+          //
+          //   imageData = new ImageData(Uint8ClampedArray.from(e), width, height)
+          //   ctx.putImageData(imageData, 0, 0)
+          //
+          // }))
 
-            // imageData.data = e
-            ctx.putImageData(imageData, 0, 0)
+          fetch('/chunk').then(e => e.json().then(e => {
+            let {x, y} = e
+            let f = (x, y) => e => e.json().then(e => {
+              const [width, height] = [32, 32];
+              const canvas = document.querySelector('#noise');
+              const ctx = canvas.getContext('2d');              // const imageData = ctx.createImageData(width, height);
+              console.log(e.length)
+              imageData = new ImageData(Uint8ClampedArray.from(e), width, height)
+              ctx.putImageData(imageData, x * 32 - me.location.x + 100, y * 32 - me.location.y + 100)
+              chunks.push({x, y, imageData})
+            })
+            for (var i = -2; i <= 2; i++) {
+              for (var j = -2; j <= 2; j++) {
+                fetch(`/chunk/${(x + i) + (y + j) * 32}`).then(f(x + i, y + j))
+              }
+            }
           }))
 
 
@@ -127,16 +171,46 @@
 
       // Listen for messages
       socket.addEventListener('message', function (event) {
-          console.log('Message from server ', event.data);
+          // console.log('Message from server ', event.data);
           let _ = JSON.parse(event.data)
           if (_.cmd == 'me') {
-            document.querySelector('#me').innerText = _.payload
-            me = JSON.parse(_.payload)
+            document.querySelector('#user').innerText = _.payload
+            let _me = JSON.parse(_.payload)
+
+            let x_offset = document.documentElement.style.getPropertyValue("--x-offset")
+            document.documentElement.style.setProperty("--x-offset", (parseInt(x_offset || 0) + me.location.x - _me.location.x) + 'px' )
+            console.log(document.documentElement.style.getPropertyValue("--x-offset"))
+            let y_offset = document.documentElement.style.getPropertyValue("--y-offset")
+            document.documentElement.style.setProperty("--y-offset", (parseInt(y_offset || 0) + me.location.y - _me.location.y) + 'px' )
+            console.log(document.documentElement.style.getPropertyValue("--y-offset"))
+
+            const canvas = document.querySelector('#noise');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+            me = _me
+
+            chunks.forEach( ({imageData, x, y}) => {
+              ctx.putImageData(imageData, x * 32 - me.location.x + 100, y * 32 - me.location.y + 100)
+            })
+
             if (me.state != 'idle') {
               console.log(me.state)
               console.log(document.querySelector(`#${me.state}`))
               document.querySelector(`#${me.state}`).innerText = `stop ${me.state}`
             }
+
+          }
+          else if (_.cmd == 'chunk') {
+            let {data: e, x, y} = _.payload
+
+            const [width, height] = [32, 32];
+            const canvas = document.querySelector('#noise');
+            const ctx = canvas.getContext('2d');
+
+            imageData = new ImageData(Uint8ClampedArray.from(e), width, height)
+            // ctx.putImageData(imageData, x * 32 - me.location.x + 100, y * 32 - me.location.y + 100)
+            chunks.push({x, y, imageData})
           }
       });
     }))

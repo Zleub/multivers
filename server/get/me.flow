@@ -10,7 +10,11 @@ export default function (req: express$Request, res, next) {
   if (user.connected) {
     return res.end( user_to_string(user) )
   }
+
+  // TODO: user init
   user.connected = false
+  user.chunks = []
+
   user.token = crypto.createHmac('sha256', Date.now().toString() + JSON.stringify(user.ip)).digest('hex');
   ws_app.ws(`/${user.token}.ws`, function(ws, req) {
     user.connected = true

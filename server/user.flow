@@ -2,6 +2,7 @@
 
 import R from 'ramda'
 import { d4 } from './dice'
+import { world } from './location'
 
 export const User = (name, ip) => {
   return {
@@ -12,13 +13,21 @@ export const User = (name, ip) => {
     peopleList: [],
 
     state: 'idle',
-    location: 'spawn',
+    location: {
+      x: world.spawn.x,
+      y: world.spawn.y
+
+
+
+    },
 
     gold: 0,
     events: [],
 
     connected: false,
     ws: null,
+
+    chunks: [],
 
     // attributes: {
     //   agility: d4,
@@ -32,7 +41,8 @@ export const User = (name, ip) => {
     //
     // }
 
-    inventory: []
+    inventory: [],
+    update: []
   }
 }
 
@@ -47,20 +57,5 @@ export const user_to_string = user => JSON.stringify(R.omit([
   'connected',
   'ip',
   'ws',
+  'chunks'
 ], user), (key, val) => val === d4 ? "d4" : val, 2)
-
-export const update_user = () => users.forEach(u => {
-  if (u.state != 'idle') {
-    let location = world[u.location]
-    let a = Math.round(Math.random() * (Object.keys(location.states).length - 1))
-    let [ name, [ [ chance, total ], [min, max], text ] ] = Object.entries(location.states[u.state])[a]
-    let _ = Math.floor(Math.random() * total) + 1
-    let res = _ <= chance
-    if (res) {
-      let _ = Math.floor(Math.random() * max) + min
-      u[name] += _
-      u.events.push(text + ` [+ ${_}] { ${new Date().toTimeString()} } `)
-      u.ws.send(JSON.stringify({ cmd: 'me', payload: user_to_string(u) }))
-    }
-  }
-})
