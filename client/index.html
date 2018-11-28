@@ -108,16 +108,6 @@
 
           }))
 
-          // fetch('/data').then(e => e.json().then(e => {
-          //   const [width, height] = [200, 200];
-          //   const canvas = document.querySelector('#noise2');
-          //   const ctx = canvas.getContext('2d');
-          //
-          //   imageData = new ImageData(Uint8ClampedArray.from(e), width, height)
-          //   ctx.putImageData(imageData, 0, 0)
-          //
-          // }))
-
           fetch('/chunk').then(e => e.json().then(e => {
             let {x, y} = e
             let f = (x, y) => e => e.json().then(e => {
@@ -132,6 +122,7 @@
             for (var i = -2; i <= 2; i++) {
               for (var j = -2; j <= 2; j++) {
                 fetch(`/chunk/${(x + i) + (y + j) * 32}`).then(f(x + i, y + j))
+
               }
             }
           }))

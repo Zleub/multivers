@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/Zleub/multivers#readme",
   "dependencies": {
+    "chance": "^1.0.16",
     "d3-delaunay": "^4.1.5",
     "express": "^4.16.3",
     "express-ws": "^4.0.0",
@@ -39,7 +40,7 @@
     "babel-preset-flow": "^6.23.0",
     "babel-preset-latest": "^6.24.1",
     "documentation": "^8.1.2",
-    "flow-bin": "^0.86.0",
+    "flow-bin": "^0.87.0",
     "flow-coverage-report": "^0.6.0",
     "flow-typed": "^2.5.1"
   }

@@ -1,10 +1,10 @@
 /* @flow */
 
-import { rand, euclidean_distance, noise2D, openSimplexRiver, openSimplexTree } from './util'
+import { type Point, rand, euclidean_distance, noise2D, openSimplexRiver, openSimplexTree } from './util'
 import { Site, getNearestSite, sites } from './site'
 
 export let [width, height] = [1024, 1024]
-export let isTree = p => {
+export let isTree = (p : Point) => {
   const value = (noise2D(p) + 1) * 128
   const valueTree = (openSimplexTree.noise2D( ...[p.x / 20, p.y / 20] ) + 1) * 128
 
@@ -12,9 +12,9 @@ export let isTree = p => {
       return p.x % (rand(5) + 2) == 0 && p.y % (rand(5) + 2) == 0
 }
 
-let rivers = []
+let rivers: Array<({|x: number, y: number|})> = []
 let isRiver = p => rivers.find(_ => p.x == _.x && p.y == _.y)
-let defRiver = p => {
+let defRiver = (p : Point) => {
   const z = (noise2D({x: p.x, y: p.y}) + 1) * 128
   const i = (p.x + p.y * width) * 4
 
@@ -39,11 +39,11 @@ let defRiver = p => {
   if (min === Infinity)
     return
 
-  let d = min == up.v ? ({x: p.x, y: p.y - 1}) :
+  let d : Point = min == up.v ? ({x: p.x, y: p.y - 1}) :
     min == down.v ? ({x: p.x, y: p.y + 1}) :
     min == left.v ? ({x: p.x - 1, y: p.y}) :
     min == right.v ? ({x: p.x + 1, y: p.y}) :
-    null
+    ({x: Infinity, y: Infinity})
 
   defRiver(d)
 }
@@ -66,7 +66,7 @@ const world_stack = [
 ]
 
 export const data = []
-export const getWorld = p => {
+export const getWorld = (p: Point) => {
   let index = p.x + p.y * width
   let value
   if (!data[index]) {
@@ -83,10 +83,13 @@ export const getWorld = p => {
   }
 
   let c = colors.find(c => value > c.value)
-  return [ c.r, c.g, c.b, value ]
+  if (c)
+    return [ c.r, c.g, c.b, value ]
+  else
+    return [ 0, 0, 0, 0 ]
 }
 
-export const getChunk = c => {
+export const getChunk = (c: number) => {
   let x = Math.floor( c % Math.floor(width / 32) )
   let y = Math.floor( c / Math.floor(width / 32) )
 
@@ -103,5 +106,5 @@ export const getChunk = c => {
     }
   }
 
-  return [].concat.apply([], map)
+  return map
 }
