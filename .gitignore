@@ -1,6 +1,5 @@
 docs
 flow-coverage
-flow-typed
 node_modules
 build/
 package-lock.json

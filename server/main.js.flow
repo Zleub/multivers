@@ -14,11 +14,6 @@ import { users, user_to_string } from './user'
 import { voronoi, delaunay, world, paths, poly } from './location'
 import { getWorld, getChunk } from './world'
 
-// import { items, Item } from './item'
-// import { width, height, sites, getWorld, getChunk } from './world'
-// import { world, update_world, update_world_daily, delaunay, voronoi, poly, paths } from './location'
-// import { users, user_to_string, update_user } from './user'
-// import { states } from './state'
 import { time, scale } from './time'
 
 if (process.argv.find(e => e == '--log' || e == '-l'))
@@ -82,10 +77,10 @@ app.get('/map', (req: express$Request, res, next) => {
     // + [...delaunay.neighbors(delaunay.find(location.x, location.y))].map(i => `<polygon points="${voronoi.cellPolygon(i).map(([x, y]) => ([x - location.x + 100, y - location.y + 100]))}" fill="none" stroke="black"/>`)
     poly.map(e => `<polygon points="${e.map(([x, y]) => ([x - location.x + 100, y - location.y + 100]))}" fill="none" stroke="black"/>`)
     // `<path d=${delaunay.render()} fill=none stroke=blue></path>`
-    + Object.entries(world).map(([n, e]) => `<circle cx=${e.x - location.x + 100} cy=${e.y - location.y + 100} r=4 fill=${req.headers.user.location.x == e.x && req.headers.user.location.y == e.y ? "red" : "white"}></circle>`)
+    // + Object.entries(world).map(([n, e]) => `<circle cx=${e.x - location.x + 100} cy=${e.y - location.y + 100} r=4 fill=${req.headers.user.location.x == e.x && req.headers.user.location.y == e.y ? "red" : "white"}></circle>`)
     // + sites.map(({x, y}, i, a) => `<circle cx=${x} cy=${y} r=${ (Math.floor(twisted_euclidean_distance(world.district42)({x,y}, world.spawn))) / 200 } fill=none stroke="blue"></circle>`)
     + paths.map(path => path.map(({x,y}, i, a) => a[i + 1] ? `<line x1="${x - location.x + 100}" y1="${y - location.y + 100}" x2="${a[i + 1].x - location.x + 100}" y2="${a[i + 1].y - location.y + 100}" stroke="brown" stroke-width="1px" />` : ''))
-    + [ `<circle id=me cx=${100} cy=${100} r=2 fill=blue ? "red" : "white"}></circle>` ]
+    // + [ `<circle id=me cx=${100} cy=${100} r=2 fill=blue ? "red" : "white"}></circle>` ]
     // + paths.map((e, i, a) => `<polygon points="${voronoi.cellPolygon(delaunay.find(e.x, e.y))}" fill="purple" fill-opacity=0.5></polygon>`)
     // + sites.map(([x, y], i, a) => `<text x=${x} y=${y} class=small>${Math.floor(twisted_euclidean_distance(world.district42)({x,y}, world.spawn)) - 7000}</text>`)
     // + sites.map(([x, y], i, a) => `<text x=${x} y=${y - 6} class=small>${Math.floor(twisted_euclidean_distance2(world.district42)({x,y}, world.spawn))}</text>`)

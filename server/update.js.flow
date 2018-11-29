@@ -2,15 +2,10 @@ import { world } from './location'
 import { users } from './user'
 
 export const update_world = () => {
-  // console.log('update_world')
-  // users.forEach(e => {
-  //   if (e.ws && e.connected) {
-  //     e.ws.send(JSON.stringify({ cmd: 'time', payload: time_convert(current_time) }))
-  //   }
-  // })
-  // Object.values(world).forEach(e => {
-  //   // e.food -= e
-  // })
+  Object.values(world).forEach(e => {
+    // if (e.size < e.population)
+    //   e.expand()
+  })
 }
 
 export const update_world_daily = () => {

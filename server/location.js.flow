@@ -1,19 +1,26 @@
 /* @flow */
 
+import {Delaunay} from "d3-delaunay";
+
 import { current_time, time_convert } from './time'
 import { items } from './item'
-// import { users } from './user'
-import { euclidean_distance, twisted_euclidean_distance, rand } from './util'
+import {
+  type Point,
+  width,
+  height,
+  rand,
+  world_to_chunk,
+  euclidean_distance,
+  twisted_euclidean_distance,
+} from './util'
 import { sites } from './site'
-import { width, height } from './world'
-
-import {Delaunay} from "d3-delaunay";
+import { City } from './city'
 
 export let delaunay = Delaunay.from( sites.map(({x, y}) => ([x, y])) )
 export let voronoi = delaunay.voronoi([0, 0, width, height])
 
 let t = []
-export let poly = [...voronoi.cellPolygons()].filter((e, i) => {
+export let poly: Array<Array<[number, number]>> = [...voronoi.cellPolygons()].filter((e, i) => {
   let _ = !e.find( ([x,y]) => x == 0 || x == width || y == 0 || y == height )
   if (!_)
     t.push({x: sites[i].x, y: sites[i].y, i})
@@ -24,42 +31,26 @@ let _sites = sites.slice(0).filter( ({x,y}) =>
   t.find( ({x: _x, y: _y}) => _x == x && _y == y ) == undefined
 )
 
-const predefs = [
-  {
-    id: 'spawn',
-    type: 'spawn',
-    name: 'Spawn City',
-		population: 1000,
-
-    ressources: {
-      wood: 1000000
-    }
-  },
-  {
-    id: 'district42'
-  }
-]
-
-export let world = {}
+export let world : {
+  [string]: City
+} = {}
 
 for (var i = 0; i < 5; i++) {
   let {x, y} = _sites[rand(_sites.length)]
 
-  let _ = {
+  let _ = new City({
     x, y,
-    type: 'city'
-  }
+    chunk: world_to_chunk({x, y}),
+    size: 0,
+    population: 0,
 
-  let p = predefs.pop()
-  if (p)
-    world[p.id] = Object.assign(_, p)
-  else {
-    _.name = 'City' + String(i)
-    world[_.name] = _
-  }
+    type: 'city',
+    id: 'City' + String(i)
+  })
+  world[_.id] = _
 }
 
-function Path(from, to) {
+function Path(from: Point, to: Point) {
   let twisted_distance = twisted_euclidean_distance(to)
   let path = [
     { x: from.x, y: from.y, d: twisted_distance(from, from) }
@@ -71,6 +62,7 @@ function Path(from, to) {
         ({x: sites[i].x, y: sites[i].y, d: twisted_distance({x: sites[i].x, y: sites[i].y}, from)})
       )
       .filter( ({x,y}) => t.find( ({x: _x, y: _y}) => _x == x && _y == y ) == undefined )
+      .filter( ({x,y}) => path.find( ({x: _x, y: _y}) => _x == x && _y == y ) == undefined )
       .sort( (a,b) => a.d - b.d )
 
       if (woot.length == 0) {
@@ -78,10 +70,10 @@ function Path(from, to) {
         break
       }
       path.push(woot[0])
-      from = woot[0]
+      from = { x: woot[0].x, y: woot[0].y }
   }
 
   return path
 }
 
-export let paths = Object.values(world).filter(e => e !== world.spawn).map(e => Path(world.spawn, e))
+export let paths = (Object.values(world): any).filter((e: City) => e !== world.spawn).map((e: City) => Path(world.spawn, e))

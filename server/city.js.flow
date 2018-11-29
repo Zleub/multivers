@@ -1,0 +1,33 @@
+import { euclidean_distance } from './util'
+
+const predefs = [
+  {
+    id: 'spawn',
+    type: 'spawn',
+    name: 'Spawn City',
+		population: 10,
+
+    ressources: {
+      wood: 1000000
+    }
+  },
+  {
+    id: 'district42'
+  }
+]
+
+export class City {
+	constructor(opt) {
+	  let p = predefs.pop()
+	  if (p)
+	    Object.assign(this, opt, p)
+	  else
+	    Object.assign(this, opt)
+	}
+
+	world(p: Point) {
+		let d = euclidean_distance(p, this)
+		if ( d < 12)
+			return [127, 127, 127, 255]
+	}
+}

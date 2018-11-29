@@ -1,7 +1,6 @@
 /* @flow */
 
-import { euclidean_distance, rand, noise2D } from './util'
-import { width, height } from './world'
+import { width, height, euclidean_distance, rand, noise2D } from './util'
 
 export const Site = (x, y) => ({x, y})
 export let sites = [

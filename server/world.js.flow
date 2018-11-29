@@ -1,9 +1,18 @@
 /* @flow */
 
-import { type Point, rand, euclidean_distance, noise2D, openSimplexRiver, openSimplexTree } from './util'
+import {
+  type Point,
+  width,
+  height,
+  rand,
+  euclidean_distance,
+  noise2D,
+  openSimplexRiver,
+  openSimplexTree
+} from './util'
 import { Site, getNearestSite, sites } from './site'
+import { world } from './location'
 
-export let [width, height] = [1024, 1024]
 export let isTree = (p : Point) => {
   const value = (noise2D(p) + 1) * 128
   const valueTree = (openSimplexTree.noise2D( ...[p.x / 20, p.y / 20] ) + 1) * 128
@@ -12,7 +21,7 @@ export let isTree = (p : Point) => {
       return p.x % (rand(5) + 2) == 0 && p.y % (rand(5) + 2) == 0
 }
 
-let rivers: Array<({|x: number, y: number|})> = []
+let rivers: Array<(Point)> = []
 let isRiver = p => rivers.find(_ => p.x == _.x && p.y == _.y)
 let defRiver = (p : Point) => {
   const z = (noise2D({x: p.x, y: p.y}) + 1) * 128
@@ -65,7 +74,7 @@ const world_stack = [
   { f: isTree,  r:   0, g:  50, b:   0},
 ]
 
-export const data = []
+const data = []
 export const getWorld = (p: Point) => {
   let index = p.x + p.y * width
   let value
@@ -80,6 +89,11 @@ export const getWorld = (p: Point) => {
   const def = world_stack.find(({f}) => f(p))
   if (def) {
     return [ def.r, def.g, def.b, value ]
+  }
+
+  const _def = Object.values(world).reduce((_, e) => e.world(p) ? e.world(p) : _, undefined)
+  if (_def != undefined) {
+    return _def
   }
 
   let c = colors.find(c => value > c.value)

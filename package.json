@@ -5,7 +5,7 @@
   "main": "cli.js",
   "scripts": {
     "all": "yarn extra ; yarn start",
-    "server": "babel -x .flow server/ -d build/server",
+    "server": "rm -rf build ; babel -x .flow server/ -d build/server ; rename 's/.js$//' build/server/*.js build/server/**/*.js",
     "start": "yarn server && node build/server/main.js",
     "watch": "nodemon . -e .flow -x \"yarn start\" -i build -i docs -i apidoc -i flow_coverage",
     "extra": "npm run doc && npm run coverage",

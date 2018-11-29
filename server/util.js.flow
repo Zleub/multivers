@@ -3,10 +3,12 @@
 import OpenSimplexNoise from 'open-simplex-noise'
 import Chance from 'chance'
 
-export type Point = {|
+export let [width, height] = [1024, 1024]
+
+export type Point = {
   x: number,
   y: number
-|};
+};
 
 export const seed = 1542936980729 // 1542841546813 // 42
 export const chance = new Chance(seed)
@@ -33,3 +35,8 @@ export const sort_distance = (p: Point) =>
 	(a: Point, b: Point) => euclidean_distance(p, a) - euclidean_distance(p, b)
 export const twisted_sort_distance = (p: Point) =>
 	(a: Point, b: Point) => twisted_euclidean_distance(p)(a, b) - twisted_euclidean_distance(p)(a, b)
+
+export const world_to_chunk = (p: Point) => ({
+  x: Math.floor( p.x % Math.floor(width / 32) ),
+  y: Math.floor( p.y / Math.floor(width / 32) )
+})
